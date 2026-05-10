@@ -10,6 +10,7 @@
 #include "../../../fontIds.h"
 #include "../GameUi.h"
 #include "SudokuGenerator.h"
+#include "SudokuMenuActivity.h"
 #include "SudokuStore.h"
 
 namespace {
@@ -121,7 +122,7 @@ void SudokuGameActivity::handleInputWon() {
     const auto diff = difficulty;
     activityManager.replaceActivity(std::make_unique<SudokuGameActivity>(renderer, mappedInput, diff, false));
   } else if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
-    activityManager.goHome();
+    activityManager.replaceActivity(std::make_unique<SudokuMenuActivity>(renderer, mappedInput));
   }
 }
 
@@ -175,9 +176,9 @@ void SudokuGameActivity::runMenuItem(uint8_t i) {
       activityManager.replaceActivity(std::make_unique<SudokuGameActivity>(renderer, mappedInput, diff, false));
       return;
     }
-    case 6:  // Exit to home
+    case 6:  // Exit to Sudoku menu
       flushSave();
-      activityManager.goHome();
+      activityManager.replaceActivity(std::make_unique<SudokuMenuActivity>(renderer, mappedInput));
       return;
   }
 }
