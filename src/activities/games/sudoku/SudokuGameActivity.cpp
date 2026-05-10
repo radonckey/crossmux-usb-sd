@@ -572,8 +572,8 @@ void SudokuGameActivity::drawModeLine() {
 void SudokuGameActivity::drawFooter() {
   const char* backLabel = "";
   const char* confirmLabel = "";
-  const char* upLabel = "";
-  const char* downLabel = "";
+  const char* leftLabel = "";
+  const char* rightLabel = "";
 
   if (state == State::Playing) {
     if (focus == Focus::Grid) {
@@ -583,19 +583,19 @@ void SudokuGameActivity::drawFooter() {
       backLabel = tr(STR_SUDOKU_CANCEL);
       confirmLabel = tr(STR_SUDOKU_PLACE);
     }
-    upLabel = tr(STR_DIR_UP);
-    downLabel = tr(STR_DIR_DOWN);
+    leftLabel = tr(STR_DIR_LEFT);
+    rightLabel = tr(STR_DIR_RIGHT);
   } else if (state == State::GameMenu) {
     backLabel = tr(STR_GAME_RESUME);
     confirmLabel = tr(STR_SELECT);
-    upLabel = tr(STR_DIR_UP);
-    downLabel = tr(STR_DIR_DOWN);
+    leftLabel = tr(STR_DIR_LEFT);
+    rightLabel = tr(STR_DIR_RIGHT);
   } else if (state == State::Won) {
     backLabel = tr(STR_GAME_HOME);
     confirmLabel = tr(STR_SUDOKU_PLAY_AGAIN);
   }
 
-  const auto labels = mappedInput.mapLabels(backLabel, confirmLabel, upLabel, downLabel);
+  const auto labels = mappedInput.mapLabels(backLabel, confirmLabel, leftLabel, rightLabel);
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }
 
