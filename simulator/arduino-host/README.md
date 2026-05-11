@@ -29,8 +29,9 @@ must be supplied by the consumer project as its own shim or real implementation.
   `std::thread` + `std::mutex` + `std::condition_variable`, so blocking primitives
   (`ulTaskNotifyTake(portMAX_DELAY)` and friends) behave as on real FreeRTOS.
 - **ESP system**: `ESP.getFreeHeap()`, `ESP.restart()`, `esp_reset_reason()`,
-  `setCpuFrequencyMhz()`, `esp_sleep_*()` enums and stubs. `RTC_NOINIT_ATTR` and
-  `RTC_DATA_ATTR` resolve to nothing.
+  `setCpuFrequencyMhz()`, `esp_sleep_*()` enums and stubs, `esp_random()` /
+  `esp_fill_random()` (forwards to thread-local `std::mt19937`, **not** cryptographic).
+  `RTC_NOINIT_ATTR` and `RTC_DATA_ATTR` resolve to nothing.
 
 ## What's NOT included
 
@@ -121,6 +122,11 @@ round trip.
   does not match the per-CPU spinlock semantics of real ESP32 FreeRTOS.
 - The Arduino `String` class is implemented as a wrapper over `std::string`. Memory
   allocation strategy differs (no SSO/no shared buffer); behaviour matches semantically.
+- `-fno-rtti` is **not** propagated (only `-fno-exceptions` is). libc++'s `std::function`
+  converting constructor uses `typeid` in its SFINAE check; with RTTI disabled it
+  silently rejects valid lambdas. Host binaries don't care about the few KB the RTTI
+  tables cost, and consumer firmware code is unaffected because it links against
+  GCC libstdc++ on the device.
 
 ## License
 

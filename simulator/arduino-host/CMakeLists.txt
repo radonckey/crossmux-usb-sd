@@ -47,8 +47,10 @@ elseif(ARDUINO_HOST_SERIAL_TARGET STREQUAL "file")
     target_compile_definitions(arduino_host PRIVATE ARDUINO_HOST_SERIAL_FILE=1)
 endif()
 
-# Match the firmware build environment (no exceptions, no RTTI).
-target_compile_options(arduino_host PUBLIC -fno-exceptions -fno-rtti)
+# Match the firmware "no exceptions" contract. RTTI is intentionally kept enabled on
+# host: libc++ (macOS) needs typeid in its std::function converting constructor's
+# SFINAE check, and host binaries don't care about the few KB RTTI tables cost.
+target_compile_options(arduino_host PUBLIC -fno-exceptions)
 
 # ---------- Examples ----------
 if(ARDUINO_HOST_BUILD_EXAMPLES)

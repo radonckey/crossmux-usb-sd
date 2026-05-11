@@ -1,7 +1,9 @@
 #include <Arduino.h>
+#include <esp_random.h>
 #include <esp_system.h>
 
 #include <cstdlib>
+#include <random>
 
 namespace {
 #ifndef ARDUINO_HOST_HEAP_SIZE_BYTES
@@ -38,3 +40,17 @@ namespace arduino_host {
 void set_restart_handler(RestartHandler fn) { g_restart = fn; }
 void set_free_heap_bytes(size_t bytes) { g_free_heap = bytes; }
 }  // namespace arduino_host
+
+namespace {
+std::mt19937& esp_rng() {
+  thread_local std::mt19937 engine{std::random_device{}()};
+  return engine;
+}
+}  // namespace
+
+uint32_t esp_random() { return static_cast<uint32_t>(esp_rng()()); }
+
+void esp_fill_random(void* buf, size_t len) {
+  auto* p = static_cast<uint8_t*>(buf);
+  for (size_t i = 0; i < len; i++) p[i] = static_cast<uint8_t>(esp_random() & 0xFF);
+}

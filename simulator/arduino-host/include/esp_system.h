@@ -1,5 +1,7 @@
 #pragma once
 
+#include <esp_random.h>  // Real Arduino-ESP32 chain pulls this in transitively; mirror that.
+
 #include <cstddef>
 #include <cstdint>
 

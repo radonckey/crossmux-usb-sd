@@ -59,6 +59,7 @@ file(GLOB_RECURSE CROSSPOINT_LIB
     "${REPO_ROOT}/lib/XmlParserUtils/*.cpp"
     "${REPO_ROOT}/lib/Xtc/*.cpp"
     "${REPO_ROOT}/lib/ZipFile/*.cpp"
+    "${REPO_ROOT}/lib/AvatarGen/*.cpp"
 )
 
 # Real HAL .cpp is replaced by simulator/hal_native/.
@@ -108,15 +109,19 @@ set(VENDOR_C
 )
 
 # Generate I18n headers (mirrors what scripts/gen_i18n.py does pre-build for PlatformIO).
+# All translation YAMLs are listed as inputs so edits to any one of them re-run the
+# generator; otherwise downstream code referencing a freshly-added STR_* key would
+# fail to compile after a merge that only touched the YAMLs.
 set(I18N_GENERATED
     ${REPO_ROOT}/lib/I18n/I18nKeys.h
     ${REPO_ROOT}/lib/I18n/I18nStrings.h
     ${REPO_ROOT}/lib/I18n/I18nStrings.cpp
 )
+file(GLOB I18N_TRANSLATIONS "${REPO_ROOT}/lib/I18n/translations/*.yaml")
 add_custom_command(
     OUTPUT ${I18N_GENERATED}
     COMMAND python3 ${REPO_ROOT}/scripts/gen_i18n.py ${REPO_ROOT}/lib/I18n/translations ${REPO_ROOT}/lib/I18n
-    DEPENDS ${REPO_ROOT}/scripts/gen_i18n.py
+    DEPENDS ${REPO_ROOT}/scripts/gen_i18n.py ${I18N_TRANSLATIONS}
     COMMENT "Generating I18n strings"
 )
 add_custom_target(i18n_generated DEPENDS ${I18N_GENERATED})
@@ -172,6 +177,7 @@ target_include_directories(crosspoint_simulator PRIVATE
     ${REPO_ROOT}/lib/JpegToBmpConverter
     ${REPO_ROOT}/lib/PngToBmpConverter
     ${REPO_ROOT}/lib/Epub/Epub/converters
+    ${REPO_ROOT}/lib/AvatarGen
 )
 
 # Rename Arduino entry points so simulator_main.cpp can drive them explicitly.

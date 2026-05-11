@@ -1,6 +1,3 @@
 build/
 arduino-host/build/
-sd_root/.crosspoint/
-sd_root/*.epub
-sd_root/*.txt
-sd_root/*.xtc
+sd_root/
