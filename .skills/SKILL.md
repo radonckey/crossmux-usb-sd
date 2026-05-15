@@ -93,6 +93,7 @@ find src -name "*.cpp" -o -name "*.h" | xargs clang-format -i
   * `gh_release`: Production (LOG_LEVEL=0)
   * `gh_release_rc`: Release candidate (LOG_LEVEL=1)
   * `slim`: Minimal build (no serial logging)
+  * `gh_release_cn`: Simplified-Chinese-only release with embedded CJK fonts (see [Chinese Build (ENABLE_CHINESE_VERSION)](#chinese-build-enable_chinese_version) below)
 
 ### Critical Build Flags
 These flags in `platformio.ini` fundamentally affect firmware behavior:
@@ -745,6 +746,82 @@ renderer.drawText(FONT_UI, x, y, tr(STR_LOADING), true);
 2. Run conversion script (see `lib/EpdFont/README`)
 3. Update global font objects in `src/main.cpp:40-115`
 4. Add font ID constant to `src/fontIds.h`
+
+---
+
+## Chinese Build (ENABLE_CHINESE_VERSION)
+
+A dedicated build env, `gh_release_cn`, produces a Simplified-Chinese-only
+firmware. The `-DENABLE_CHINESE_VERSION` flag in [platformio.ini](../platformio.ini)
+gates every CN-only resource:
+
+| Resource | Behavior under ENABLE_CHINESE_VERSION |
+|---|---|
+| i18n string table (`gen_i18n.py`) | Pre-script auto-detects the flag via `env.subst("$BUILD_FLAGS")` and emits **only EN + ZH_CN** into `I18nStrings.cpp` (saves ~144 KB vs the full 23-language table). Detection logs `[gen_i18n] ENABLE_CHINESE_VERSION detected …` during the build. |
+| Built-in fonts ([lib/EpdFont/builtinFonts/all.h](../lib/EpdFont/builtinFonts/all.h)) | Latin headers (NotoSerif / NotoSans / OpenDyslexic) are skipped. Six per-size CJK headers (`notosans_cjk_{8,10,12,14,16,18}.h`) replace them — raw 2-bit bitmaps, top-3000 frequency-ranked Chinese chars + ASCII + full-width punctuation. |
+| `src/main.cpp` font globals | Each Latin `EpdFont`/`EpdFontFamily` global is aliased to the matching-size CJK header. Bold/italic variants all point at the Regular OTF (no style data in the subset). SD-card fonts still provide style variants when the user loads them. |
+| EPUB layout ([lib/Epub/Epub/ParsedText.cpp](../lib/Epub/Epub/ParsedText.cpp)) | CJK punctuation rules are active: line-head prohibition (禁则) glues trailing punctuation back onto the previous line; full-width punctuation gets width-padded so it occupies a full CJK cell. Both are zero-cost in non-CN builds (gated by `#ifdef`). |
+| Activities (`src/activities/apps/chinese-chess/`) | Compiled in (also gated by `build_src_filter +<activities/apps/chinese-chess/>`). |
+| First-boot default language (`src/CrossPointSettings.h`) | `language` is initialized to `Language::ZH_CN` so a fresh device boots straight into Chinese UI; non-CN builds still default to `Language::EN`. |
+
+**Flash budget** (default `partitions.csv`, app0 = 6.25 MB):
+
+| Section | Bytes |
+|---|---|
+| Code + non-font data | ~3.1 MB |
+| 6 CJK font headers (raw bitmaps) | ~3.3 MB |
+| i18n strings (EN + ZH_CN only) | ~16 KB |
+| **Total** | **~6.43 MB / 6.25 MB (98%)**, ~120 KB headroom |
+
+**Trade-off if you need more glyph coverage**: switch to the optional 8 MB
+single-OTA layout by uncommenting `board_build.partitions = partitions_cn.csv`
+in `[env:gh_release_cn]`. This disables A/B OTA rollback.
+
+### Regenerating the CJK fonts
+
+```bash
+# 1. (One-time) install build deps into a venv
+python3 -m venv /tmp/cn_font_venv
+/tmp/cn_font_venv/bin/pip install -r lib/EpdFont/scripts/requirements.txt
+
+# 2. Place NotoSansSC-Regular.otf into the source dir (gitignored).
+#    Source: https://fonts.google.com/noto/specimen/Noto+Sans+SC
+cp /path/to/NotoSansSC-Regular.otf lib/EpdFont/builtinFonts/source/NotoSansSC/
+
+# 3. Pick the top-N most-common characters (default N=3000)
+PYTHON=/tmp/cn_font_venv/bin/python3 \
+  python3 lib/EpdFont/scripts/build_cn_charset.py --top 3000
+
+# 4. Generate the 6 per-size CJK headers
+PYTHON=/tmp/cn_font_venv/bin/python3 \
+  bash lib/EpdFont/scripts/build-cn-builtin-fonts.sh
+
+# 5. Build
+pio run -e gh_release_cn
+```
+
+`build_cn_charset.py` prints the highest-frequency casualties (chars just
+above and below the cutoff) so you can verify the trim looks reasonable.
+
+### Known limitations
+
+- **No bold/italic CJK glyphs**: the bitmaps come from a single NotoSansSC-Regular subset. UI elements that pass `EpdFontFamily::Style::Bold` render the regular weight under CN.
+- **Font-size dropdown affects rendered size**: each reader size (12/14/16/18pt) and UI size (10/12pt) and small font (8pt) has its own bitmap header. Switching size really does swap glyph bitmaps.
+- **Rare characters render as □**: with 3000 chars, classical literature, niche surnames/place names, and chemistry/medical jargon may show placeholder glyphs. Bump `--top` higher (and accept tighter flash) if this is a problem.
+- **`FontDecompressor` is bypassed for CJK** by design — bitmaps are stored raw because compressing 6 fonts × ~50 KB groups fragments the heap on boot.
+
+### Files
+
+| Path | Role |
+|---|---|
+| `lib/EpdFont/scripts/build_cn_charset.py` | Rank GB2312 Level-1 by wordfreq Zipf, emit top-N |
+| `lib/EpdFont/scripts/gb2312_lv1.txt` | Full GB2312 Level-1 char list (3755 chars, upstream input) |
+| `lib/EpdFont/scripts/cn_common_chars.txt` | Selected top-N subset (committed) |
+| `lib/EpdFont/scripts/build-cn-builtin-fonts.sh` | pyftsubset → fontconvert.py pipeline, one header per size |
+| `lib/EpdFont/builtinFonts/notosans_cjk_{8,10,12,14,16,18}.h` | Generated bitmap headers (committed) |
+| `lib/EpdFont/builtinFonts/source/NotoSansSC/` | TTF source dir (gitignored except for `.gitignore`) |
+| `lib/I18n/translations/chinese.yaml` | Simplified Chinese translations (`_language_code: ZH_CN`) |
+| `partitions_cn.csv` | Optional 8 MB single-OTA partition layout |
 
 ---
 

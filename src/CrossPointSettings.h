@@ -1,5 +1,6 @@
 #pragma once
 #include <HalStorage.h>
+#include <I18nKeys.h>
 
 #include <cstdint>
 #include <iosfwd>
@@ -223,8 +224,13 @@ class CrossPointSettings {
   uint8_t imageRendering = IMAGES_DISPLAY;
   // Tilt-based page turning (X3 only — requires QMI8658 IMU)
   uint8_t tiltPageTurn = TILT_OFF;
-  // Language setting (Language enum index, default 0 = EN)
-  uint8_t language = 0;
+  // Language setting (Language enum index). First-boot default is ZH_CN under
+  // ENABLE_CHINESE_VERSION (where the table only has EN + ZH_CN), otherwise EN.
+#ifdef ENABLE_CHINESE_VERSION
+  uint8_t language = static_cast<uint8_t>(Language::ZH_CN);
+#else
+  uint8_t language = static_cast<uint8_t>(Language::EN);
+#endif
 
   ~CrossPointSettings() = default;
 
