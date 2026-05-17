@@ -29,6 +29,7 @@
 #include "components/icons/library.h"
 #include "components/icons/recent.h"
 #include "components/icons/settings2.h"
+#include "components/icons/standby.h"
 #include "components/icons/sudoku.h"
 #include "components/icons/text24.h"
 #include "components/icons/transfer.h"
@@ -94,6 +95,8 @@ const uint8_t* iconForName(UIIcon icon, int size) {
 #endif
       case UIIcon::Avatar:
         return AvatarIcon;
+      case UIIcon::Standby:
+        return StandbyIcon;
       default:
         return nullptr;
     }

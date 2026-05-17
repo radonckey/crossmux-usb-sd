@@ -21,6 +21,8 @@ class WiFiClass {
   int begin(const char* = nullptr, const char* = nullptr) { return 0; }
   int status() { return 0; }
   void disconnect(bool = false) {}
+  void disconnect(bool, bool) {}
+  void persistent(bool) {}
   IPAddress localIP() { return IPAddress(); }
   String macAddress() { return String("00:00:00:00:00:00"); }
   String SSID() { return String(); }
@@ -34,5 +36,6 @@ class WiFiClass {
 enum WiFiMode { WIFI_OFF = 0, WIFI_STA, WIFI_AP, WIFI_AP_STA };
 enum WiFiStatus { WL_NO_SHIELD = 0, WL_IDLE_STATUS, WL_NO_SSID_AVAIL, WL_SCAN_COMPLETED, WL_CONNECTED,
                   WL_CONNECT_FAILED, WL_CONNECTION_LOST, WL_DISCONNECTED };
+using wl_status_t = int;
 
 extern WiFiClass WiFi;

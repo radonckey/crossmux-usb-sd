@@ -7,4 +7,5 @@
 class InputManager {
  public:
   InputManager() = default;
+  static constexpr int POWER_BUTTON_PIN = 3;
 };
