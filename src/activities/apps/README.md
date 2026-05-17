@@ -17,7 +17,8 @@ apps/
 ├── gomoku/
 ├── chinese-chess/             # conditional — gated by ENABLE_CHINESE_VERSION (see "Conditional apps" below)
 ├── minesweeper/
-└── avatar/
+├── avatar/
+└── cellular/                  # Conway's Game of Life — see "Stateless toy apps" below
 ```
 
 **Why the `Game*` prefix for `GameUi` and `GameSaveDebouncer`** — these helpers carry save-state and game-board semantics. They are used by Sudoku, Gomoku, and Minesweeper, not by Ugly Avatar (which is a single-shot generator). The name reflects what they actually do; do not rename them to `App*`.
@@ -86,7 +87,13 @@ That's it — no enum, no `switch` cases, no `buildItems()`. The lambdas in `ren
 
 ---
 
-### 5. (Optional) Conditional / compile-flag-gated apps
+### 5. (Optional) Stateless toy apps
+
+Some apps have no save state at all — Cellular (Conway's Game of Life) and Ugly Avatar are single-screen toys that re-seed on entry and exit cleanly. They skip both `GameSaveDebouncer` and any `*Store.{h,cpp}` layer, and their `Activity` is launched directly (no `*MenuActivity`). Use this pattern when the app has no "in-progress game" worth resuming; it cuts a few hundred lines and avoids touching SPIFFS.
+
+---
+
+### 6. (Optional) Conditional / compile-flag-gated apps
 
 Some apps ship only in a subset of releases — e.g. Chinese Chess (`chinese-chess/`) ships only in the Chinese-only release (`env:gh_release_cn`) and the host simulator. The branch lives behind `#ifdef ENABLE_CHINESE_VERSION`.
 

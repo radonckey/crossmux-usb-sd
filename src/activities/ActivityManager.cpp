@@ -7,6 +7,7 @@
 #include "OpdsServerStore.h"
 #include "apps/AppsMenuActivity.h"
 #include "apps/avatar/UglyAvatarActivity.h"
+#include "apps/cellular/CellularGameActivity.h"
 #ifdef ENABLE_CHINESE_VERSION
 #include "apps/chinese-chess/ChineseChessMenuActivity.h"
 #endif
@@ -227,6 +228,10 @@ void ActivityManager::goToGomoku() { replaceActivity(std::make_unique<GomokuMenu
 
 void ActivityManager::goToMinesweeper() {
   replaceActivity(std::make_unique<MinesweeperMenuActivity>(renderer, mappedInput));
+}
+
+void ActivityManager::goToCellular() {
+  replaceActivity(std::make_unique<CellularGameActivity>(renderer, mappedInput));
 }
 
 #ifdef ENABLE_CHINESE_VERSION

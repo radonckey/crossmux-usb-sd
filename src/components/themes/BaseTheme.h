@@ -91,7 +91,9 @@ enum UIIcon {
   ChineseChess,
 #endif
   Minesweeper,
-  Avatar
+  Avatar,
+  Cellular
+
 };
 
 enum class KeyboardKeyType { Normal, Shift, Mode, Space, Del, Ok, Disabled };
