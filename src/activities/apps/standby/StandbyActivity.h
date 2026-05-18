@@ -18,8 +18,11 @@ class StandbyActivity final : public Activity {
   void render(RenderLock&&) override;
   void onExit() override;
 
-  // Tight loop and prevent auto-sleep while WiFi/NTP sync is in progress.
-  bool preventAutoSleep() override { return syncState_ != SyncState::Idle; }
+  // Standby is a clock — keep the framework's deep-sleep timer (main.cpp:422,
+  // default 10 min) paused for the entire lifetime of this activity. Exiting
+  // back to Apps restores the default sleep behaviour. Tight-loop polling is
+  // still only used during WiFi/NTP sync.
+  bool preventAutoSleep() override { return true; }
   bool skipLoopDelay() override { return syncState_ != SyncState::Idle; }
 
  private:
