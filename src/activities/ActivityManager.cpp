@@ -19,6 +19,7 @@
 #endif
 #include "apps/gomoku/GomokuMenuActivity.h"
 #include "apps/minesweeper/MinesweeperMenuActivity.h"
+#include "apps/standby/StandbyActivity.h"
 #include "apps/sudoku/SudokuMenuActivity.h"
 #include "boot_sleep/BootActivity.h"
 #include "boot_sleep/SleepActivity.h"
@@ -239,6 +240,8 @@ void ActivityManager::goToMinesweeper() {
 void ActivityManager::goToCellular() {
   replaceActivity(std::make_unique<CellularGameActivity>(renderer, mappedInput));
 }
+
+void ActivityManager::goToStandby() { replaceActivity(std::make_unique<StandbyActivity>(renderer, mappedInput)); }
 
 #ifdef ENABLE_CHINESE_VERSION
 void ActivityManager::goToChineseChess() {

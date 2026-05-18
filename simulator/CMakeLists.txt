@@ -162,6 +162,7 @@ target_include_directories(crosspoint_simulator PRIVATE
     ${REPO_ROOT}/src
     ${REPO_ROOT}/lib/hal
     ${REPO_ROOT}/lib/Logging
+    ${REPO_ROOT}/lib/Memory
     ${REPO_ROOT}/lib/I18n
     ${REPO_ROOT}/lib/GfxRenderer
     ${REPO_ROOT}/lib/EpdFont

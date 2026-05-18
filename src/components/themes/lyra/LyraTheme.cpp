@@ -32,6 +32,7 @@
 #include "components/icons/minesweeper.h"
 #include "components/icons/recent.h"
 #include "components/icons/settings2.h"
+#include "components/icons/standby.h"
 #include "components/icons/sudoku.h"
 #include "components/icons/text24.h"
 #include "components/icons/transfer.h"
@@ -103,6 +104,8 @@ const uint8_t* iconForName(UIIcon icon, int size) {
         return AvatarIcon;
       case UIIcon::Cellular:
         return CellularIcon;
+      case UIIcon::Standby:
+        return StandbyIcon;
       default:
         return nullptr;
     }

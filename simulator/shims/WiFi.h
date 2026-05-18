@@ -26,6 +26,8 @@ class WiFiClass {
   int begin(const char* = nullptr, const char* = nullptr) { return WL_CONNECTED; }
   int status() { return WL_CONNECTED; }
   void disconnect(bool = false) {}
+  void disconnect(bool, bool) {}
+  void persistent(bool) {}
   IPAddress localIP() { return IPAddress(127, 0, 0, 1); }
   String macAddress() { return String("02:00:00:00:00:01"); }
   String SSID() { return String("SimulatedWiFi"); }
@@ -37,3 +39,5 @@ class WiFiClass {
 };
 
 extern WiFiClass WiFi;
+
+using wl_status_t = int;

@@ -93,8 +93,8 @@ enum UIIcon {
 #endif
   Minesweeper,
   Avatar,
-  Cellular
-
+  Cellular,
+  Standby,
 };
 
 enum class KeyboardKeyType { Normal, Shift, Mode, Space, Del, Ok, Disabled };

@@ -27,6 +27,7 @@ constexpr AppEntry kAppEntries[] = {
     {StrId::STR_MINESWEEPER_TITLE, UIIcon::Minesweeper, &ActivityManager::goToMinesweeper},
     {StrId::STR_UGLY_AVATAR, UIIcon::Avatar, &ActivityManager::goToUglyAvatar},
     {StrId::STR_CELLULAR_TITLE, UIIcon::Cellular, &ActivityManager::goToCellular},
+    {StrId::STR_STANDBY_TITLE, UIIcon::Standby, &ActivityManager::goToStandby},
 };
 
 constexpr int kAppCount = static_cast<int>(sizeof(kAppEntries) / sizeof(kAppEntries[0]));
