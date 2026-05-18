@@ -164,6 +164,11 @@ bool StandbyActivity::trySilentWifiConnect() {
 
   WiFi.persistent(false);
   WiFi.mode(WIFI_STA);
+  // Fresh-slate disconnect (radio off + erase cached AP) so the next begin()
+  // latches the exact creds we just loaded, not whatever the radio retained
+  // from a previous session. The disconnect(false) form used by the teardown
+  // paths is deliberately different — there we want to keep the AP cached
+  // for the next silent-connect attempt.
   WiFi.disconnect(true, true);
   delay(100);
   if (pass.empty()) {
@@ -250,6 +255,11 @@ void StandbyActivity::pumpTimeSync() {
   if (syncState_ == SyncState::NtpSyncing) {
     if (sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
       standby_time::setSynced(true);
+      // Saved credentials worked this session — clear the "already prompted"
+      // gate so that if they later fail (e.g. router password changed) the
+      // next Standby entry can prompt the user again instead of staying
+      // silently stuck on the fallback clock.
+      g_promptedForWifiThisSession = false;
       LOG_DBG("STANDBY", "NTP synced");
       finishTimeSync();
       return;
