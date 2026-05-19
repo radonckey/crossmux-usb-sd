@@ -76,6 +76,65 @@ inline void transformLocal(float lx, float ly, const DigitParams& p, int& outX, 
   outY = static_cast<int>(ry * p.globalScale + p.yBase + 0.5f);
 }
 
+// ── Line clip (Cohen–Sutherland) ────────────────────────────────────────────
+//
+// Clips a line segment to the closed rectangle [xMin,xMax] × [yMin,yMax].
+// Returns false when the segment is entirely outside; otherwise writes the
+// clipped endpoints back through the references and returns true.
+//
+// Why this exists: the sloppy face's rotated + sheared + jittered strokes
+// routinely spray a few pixels past the panel edge by design, and
+// GfxRenderer::drawPixel() logs every off-panel write as a "GFX !! Outside
+// range" error (lib/GfxRenderer/GfxRenderer.cpp:241-244). Clipping at the
+// call site keeps that diagnostic useful for real bugs while silencing the
+// expected spill — the on-screen pixel set is unchanged either way.
+inline bool clipSegmentToRect(int& x0, int& y0, int& x1, int& y1,  //
+                              int xMin, int yMin, int xMax, int yMax) {
+  auto outcode = [&](int x, int y) {
+    int c = 0;
+    if (x < xMin) c |= 1;
+    else if (x > xMax) c |= 2;
+    if (y < yMin) c |= 4;
+    else if (y > yMax) c |= 8;
+    return c;
+  };
+  int c0 = outcode(x0, y0);
+  int c1 = outcode(x1, y1);
+  for (int guard = 0; guard < 8; ++guard) {
+    if ((c0 | c1) == 0) return true;   // trivially inside
+    if ((c0 & c1) != 0) return false;  // both sit beyond the same edge
+    const int c = c0 ? c0 : c1;
+    const float fx0 = static_cast<float>(x0);
+    const float fy0 = static_cast<float>(y0);
+    const float fx1 = static_cast<float>(x1);
+    const float fy1 = static_cast<float>(y1);
+    int x = 0, y = 0;
+    if (c & 8) {  // bottom
+      x = static_cast<int>(fx0 + (fx1 - fx0) * (yMax - fy0) / (fy1 - fy0) + 0.5f);
+      y = yMax;
+    } else if (c & 4) {  // top
+      x = static_cast<int>(fx0 + (fx1 - fx0) * (yMin - fy0) / (fy1 - fy0) + 0.5f);
+      y = yMin;
+    } else if (c & 2) {  // right
+      y = static_cast<int>(fy0 + (fy1 - fy0) * (xMax - fx0) / (fx1 - fx0) + 0.5f);
+      x = xMax;
+    } else {  // left
+      y = static_cast<int>(fy0 + (fy1 - fy0) * (xMin - fx0) / (fx1 - fx0) + 0.5f);
+      x = xMin;
+    }
+    if (c == c0) {
+      x0 = x;
+      y0 = y;
+      c0 = outcode(x0, y0);
+    } else {
+      x1 = x;
+      y1 = y;
+      c1 = outcode(x1, y1);
+    }
+  }
+  return false;  // unreachable in practice; bail out instead of spinning
+}
+
 // ── Stroke segment ──────────────────────────────────────────────────────────
 //
 // In BW mode this is just `drawLine` with the requested thickness.  In
@@ -115,10 +174,16 @@ inline void transformLocal(float lx, float ly, const DigitParams& p, int& outX, 
 inline void drawStrokeSegment(GfxRenderer& renderer, int x0, int y0, int x1, int y1, int strokeWidth) {
   if (renderer.getRenderMode() != GfxRenderer::BW) return;
 
+  const int xMax = renderer.getScreenWidth() - 1;
+  const int yMax = renderer.getScreenHeight() - 1;
   const int half = strokeWidth / 2;
   for (int j = -half; j <= half; ++j) {
     for (int i = -half; i <= half; ++i) {
-      renderer.drawLine(x0 + i, y0 + j, x1 + i, y1 + j, /*state=*/true);
+      int cx0 = x0 + i, cy0 = y0 + j;
+      int cx1 = x1 + i, cy1 = y1 + j;
+      if (clipSegmentToRect(cx0, cy0, cx1, cy1, 0, 0, xMax, yMax)) {
+        renderer.drawLine(cx0, cy0, cx1, cy1, /*state=*/true);
+      }
     }
   }
 }
