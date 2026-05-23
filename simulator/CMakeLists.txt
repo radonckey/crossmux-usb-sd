@@ -4,6 +4,16 @@ project(crosspoint_simulator LANGUAGES CXX C)
 get_filename_component(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
 # -----------------------------------------------------------------------------
+# WASM uses pthreads (Web Workers + SharedArrayBuffer) to back FreeRTOS-on-std::thread.
+# Shared-memory linking requires EVERY object — including the arduino-host subdirectory
+# and the vendored C libs — to be built with atomics/bulk-memory (-pthread). Set it at
+# directory scope BEFORE add_subdirectory so it propagates to all targets below.
+if(EMSCRIPTEN)
+    add_compile_options(-pthread)
+    add_link_options(-pthread)
+endif()
+
+# -----------------------------------------------------------------------------
 add_subdirectory(arduino-host)
 
 # Third-party: ArduinoJson (header-only, fetched once).
@@ -16,23 +26,30 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(arduinojson)
 
-# libcurl — backs the simulator HTTPClient shim so WeRead (and any other on-device
-# HTTPS code paths that we don't exclude) can hit the real network from host.
-find_package(CURL REQUIRED)
+# libcurl — backs the native simulator HTTPClient shim so WeRead (and any other
+# on-device HTTPS code paths that we don't exclude) can hit the real network from host.
+# The WASM build is offline-only (shims_wasm/HTTPClient.h shadows the curl shim), so it
+# skips libcurl entirely.
+if(NOT EMSCRIPTEN)
+    find_package(CURL REQUIRED)
+endif()
 
-# SDL2 — required for the simulator window.
-find_package(SDL2 QUIET)
-if(NOT SDL2_FOUND)
-    find_program(SDL2_CONFIG NAMES sdl2-config)
-    if(SDL2_CONFIG)
-        execute_process(COMMAND ${SDL2_CONFIG} --cflags
-            OUTPUT_VARIABLE SDL2_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-        execute_process(COMMAND ${SDL2_CONFIG} --libs
-            OUTPUT_VARIABLE SDL2_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-        separate_arguments(SDL2_CFLAGS UNIX_COMMAND "${SDL2_CFLAGS}")
-        separate_arguments(SDL2_LDFLAGS UNIX_COMMAND "${SDL2_LDFLAGS}")
-    else()
-        message(FATAL_ERROR "SDL2 not found. Install via 'brew install sdl2' or 'apt install libsdl2-dev'.")
+# SDL2 — native simulator window only. The WASM build renders via the browser canvas
+# and reads input from JavaScript, so it has no SDL dependency.
+if(NOT EMSCRIPTEN)
+    find_package(SDL2 QUIET)
+    if(NOT SDL2_FOUND)
+        find_program(SDL2_CONFIG NAMES sdl2-config)
+        if(SDL2_CONFIG)
+            execute_process(COMMAND ${SDL2_CONFIG} --cflags
+                OUTPUT_VARIABLE SDL2_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+            execute_process(COMMAND ${SDL2_CONFIG} --libs
+                OUTPUT_VARIABLE SDL2_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+            separate_arguments(SDL2_CFLAGS UNIX_COMMAND "${SDL2_CFLAGS}")
+            separate_arguments(SDL2_LDFLAGS UNIX_COMMAND "${SDL2_LDFLAGS}")
+        else()
+            message(FATAL_ERROR "SDL2 not found. Install via 'brew install sdl2' or 'apt install libsdl2-dev'.")
+        endif()
     endif()
 endif()
 
@@ -97,15 +114,26 @@ list(APPEND CROSSPOINT_LIB
     ${REPO_ROOT}/lib/KOReaderSync/KOReaderJsonIO.cpp
 )
 
-set(SIMULATOR_HAL_NATIVE
+# HAL backends. Clock/Power/Storage/System/Tilt are shared (POSIX + std::chrono, which
+# Emscripten supports as-is). Display and GPIO have WASM variants: the WASM display
+# pushes the framebuffer to the browser canvas instead of an SDL texture, and WASM GPIO
+# takes input from JavaScript instead of SDL events.
+set(SIMULATOR_HAL
     hal_native/HalClock_native.cpp
-    hal_native/HalDisplay_native.cpp
-    hal_native/HalGPIO_native.cpp
     hal_native/HalPowerManager_native.cpp
     hal_native/HalStorage_native.cpp
     hal_native/HalSystem_native.cpp
     hal_native/HalTiltSensor_native.cpp
 )
+if(EMSCRIPTEN)
+    list(APPEND SIMULATOR_HAL
+        hal_wasm/HalDisplay_wasm.cpp
+        hal_wasm/HalGPIO_wasm.cpp)
+else()
+    list(APPEND SIMULATOR_HAL
+        hal_native/HalDisplay_native.cpp
+        hal_native/HalGPIO_native.cpp)
+endif()
 
 # Vendored third-party C libraries inside the repo.
 set(VENDOR_C
@@ -133,14 +161,23 @@ add_custom_command(
 )
 add_custom_target(i18n_generated DEPENDS ${I18N_GENERATED})
 
+# Entry point + windowing. Native drives an SDL window/event loop; WASM has no window
+# (rendering + input are owned by the browser), so it uses a minimal entry point.
+if(EMSCRIPTEN)
+    set(SIMULATOR_ENTRY simulator_main_wasm.cpp)
+else()
+    set(SIMULATOR_ENTRY
+        simulator_main.cpp
+        simulator_window.cpp
+        simulator_shell.cpp
+        simulator_overlay.cpp
+        simulator_settings.cpp)
+endif()
+
 add_executable(crosspoint_simulator
-    simulator_main.cpp
-    simulator_window.cpp
-    simulator_shell.cpp
-    simulator_overlay.cpp
-    simulator_settings.cpp
+    ${SIMULATOR_ENTRY}
     missing_symbols.cpp
-    ${SIMULATOR_HAL_NATIVE}
+    ${SIMULATOR_HAL}
     ${CROSSPOINT_SRC}
     ${CROSSPOINT_LIB}
     ${VENDOR_C}
@@ -148,13 +185,16 @@ add_executable(crosspoint_simulator
 )
 add_dependencies(crosspoint_simulator i18n_generated)
 
-target_link_libraries(crosspoint_simulator PRIVATE arduino_host ArduinoJson CURL::libcurl)
+target_link_libraries(crosspoint_simulator PRIVATE arduino_host ArduinoJson)
 
-if(SDL2_FOUND)
-    target_link_libraries(crosspoint_simulator PRIVATE SDL2::SDL2)
-else()
-    target_compile_options(crosspoint_simulator PRIVATE ${SDL2_CFLAGS})
-    target_link_options(crosspoint_simulator PRIVATE ${SDL2_LDFLAGS})
+if(NOT EMSCRIPTEN)
+    target_link_libraries(crosspoint_simulator PRIVATE CURL::libcurl)
+    if(SDL2_FOUND)
+        target_link_libraries(crosspoint_simulator PRIVATE SDL2::SDL2)
+    else()
+        target_compile_options(crosspoint_simulator PRIVATE ${SDL2_CFLAGS})
+        target_link_options(crosspoint_simulator PRIVATE ${SDL2_LDFLAGS})
+    endif()
 endif()
 
 target_include_directories(crosspoint_simulator PRIVATE
@@ -191,7 +231,17 @@ target_include_directories(crosspoint_simulator PRIVATE
     ${REPO_ROOT}/lib/AvatarGen
 )
 
-# Rename Arduino entry points so simulator_main.cpp can drive them explicitly.
+# The WASM build replaces the libcurl-backed HTTPClient shim with an offline stub.
+# Prepend shims_wasm so it shadows shims/HTTPClient.h on the include path.
+if(EMSCRIPTEN)
+    target_include_directories(crosspoint_simulator BEFORE PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/shims_wasm)
+endif()
+
+# Rename Arduino entry points so the simulator entry can drive them explicitly.
+# ENABLE_CHINESE_VERSION is on for both native and WASM: the browser demo ships the
+# Chinese build (CJK fonts + WeRead/中国象棋/农历/CJK typography), with the startup
+# language following navigator.language (see simulator_main_wasm.cpp --lang).
 target_compile_definitions(crosspoint_simulator PRIVATE
     CROSSPOINT_EMULATED=1
     EINK_DISPLAY_SINGLE_BUFFER_MODE=1
@@ -208,4 +258,37 @@ target_compile_definitions(crosspoint_simulator PRIVATE
 
 target_compile_options(crosspoint_simulator PRIVATE -fno-exceptions -fno-rtti
     -Wno-unused-parameter -Wno-deprecated-declarations -Wno-bidi-chars)
+
+# -----------------------------------------------------------------------------
+# WebAssembly (Emscripten) link configuration.
+#   - pthreads (Web Workers + SharedArrayBuffer) back FreeRTOS-on-std::thread; this
+#     requires COOP/COEP headers when served (see crosspoint-web).
+#   - the demo SD card (one small public-domain epub + minimal .crosspoint cache) is
+#     preloaded into MEMFS at /sd via --preload-file.
+#   - EXIT_RUNTIME=0 keeps the runtime alive after main() returns so the firmware
+#     worker keeps running and the exported functions stay callable.
+#   - output is crosspoint_simulator_wasm.{js,wasm,data}, MODULARIZE'd as
+#     createSimulator() for clean loading from the browser page.
+# -----------------------------------------------------------------------------
+if(EMSCRIPTEN)
+    target_compile_options(crosspoint_simulator PRIVATE -pthread)
+    set(SIMULATOR_SD_DEMO ${CMAKE_CURRENT_SOURCE_DIR}/sd_root_demo)
+    target_link_options(crosspoint_simulator PRIVATE
+        -pthread
+        -sPTHREAD_POOL_SIZE=6
+        -sALLOW_MEMORY_GROWTH=1
+        -sINITIAL_MEMORY=64MB
+        -sMAXIMUM_MEMORY=512MB
+        -sEXIT_RUNTIME=0
+        -sMODULARIZE=1
+        -sEXPORT_NAME=createSimulator
+        -sENVIRONMENT=web,worker
+        -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,UTF8ToString,HEAPU8
+        "-sEXPORTED_FUNCTIONS=_main,_malloc,_free,_simulator_framebuffer_ptr,_simulator_consume_dirty,_simulator_display_width,_simulator_display_height,_simulator_buffer_size,_simulator_inject_button"
+        "--preload-file=${SIMULATOR_SD_DEMO}@/sd"
+    )
+    set_target_properties(crosspoint_simulator PROPERTIES
+        OUTPUT_NAME "crosspoint_simulator_wasm"
+        SUFFIX ".js")
+endif()
 

@@ -68,6 +68,26 @@ cmake --build simulator/build -j
 
 CMake fetches ArduinoJson via `FetchContent` on first configure (~1s shallow clone).
 
+## WebAssembly (browser) build
+
+The same firmware also builds to WASM for the crosspoint-web homepage demo. It drops SDL
+(rendering + input move to the browser via `hal_wasm/`), drops libcurl (offline; uses
+`shims_wasm/HTTPClient.h`), builds the **ENABLE_CHINESE_VERSION** variant (CJK fonts +
+WeRead/中国象棋/农历/CJK typography — same as native), and preloads a small public-domain
+book from `sd_root_demo/` into MEMFS at `/sd`. The startup UI language follows the browser:
+`index.html` maps `navigator.language` to a `--lang ZH_CN|EN` arg that `simulator_main_wasm.cpp`
+applies before first render. FreeRTOS tasks run on Web Worker threads (pthreads), so the page
+must be cross-origin isolated (COOP/COEP).
+
+```sh
+# Prerequisites: emsdk (https://github.com/emscripten-core/emsdk), activated.
+EMSDK=~/emsdk simulator/build_wasm.sh
+# → simulator/build_wasm/crosspoint_simulator_wasm.{js,wasm,data}
+```
+
+The CMake WASM branch is guarded by `if(EMSCRIPTEN)`; the native build above is unchanged.
+See `crosspoint-web/SIMULATOR.md` for how the artifacts are embedded and served.
+
 ## Run
 
 ```sh
