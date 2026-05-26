@@ -13,8 +13,8 @@ backend that draws to SDL / Qt / a terminal / whatever).
 ## What's included
 
 This layer covers Arduino *core* + FreeRTOS + ESP-IDF system APIs. Anything beyond core
-(WiFi, HTTPClient, OTA, web/socket servers, image decoders, QR…) is **out of scope** and
-must be supplied by the consumer project as its own shim or real implementation.
+(WiFi, esp_http_client, OTA, web/socket servers, image decoders, QR…) is **out of scope**
+and must be supplied by the consumer project as its own shim or real implementation.
 
 - **Arduino core**: `millis()`, `micros()`, `delay()`, `delayMicroseconds()`, `yield()`,
   `String`, `Print`, `Stream`, `HardwareSerial` (writes to stdout/stderr/file),
@@ -35,8 +35,9 @@ must be supplied by the consumer project as its own shim or real implementation.
 
 ## What's NOT included
 
-- **Networking / OTA**: WiFi, HTTPClient, NetworkUdp, WebServer, WebSocketsServer,
-  esp_ota_ops, MD5Builder. Provide your own shim or real implementation.
+- **Networking / OTA**: WiFi, esp_http_client (+ esp_crt_bundle), NetworkUdp, WebServer,
+  WebSocketsServer, esp_ota_ops, MD5Builder. Provide your own shim or real
+  implementation.
 - **Third-party libraries**: image codecs (PNGdec, JPEGDEC), QR code generators
   (`qrcode.h`), base64 helpers. Same — out of scope.
 - **GUI / windowing**: arduino-host has zero SDL/Qt/X11 dependency. Pair with your own

@@ -55,8 +55,8 @@ __attribute__((weak)) void analogWrite(uint8_t, int) {}
 bool setCpuFrequencyMhz(uint32_t) { return true; }
 uint32_t getCpuFrequencyMhz() { return 160; }
 
-// Global Arduino-core bus instances. WiFi / HTTPClient / OTA / etc are Arduino-ESP32
-// ecosystem libraries — not arduino-host's responsibility; consumers that need them
-// supply their own header + global.
+// Global Arduino-core bus instances. WiFi / esp_http_client / OTA / etc are
+// Arduino-ESP32 + ESP-IDF ecosystem APIs — not arduino-host's responsibility;
+// consumers that need them supply their own header + global.
 SPIClass SPI;
 TwoWire Wire;

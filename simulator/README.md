@@ -28,9 +28,10 @@ filesystem for the "SD card".
 │ simulator/shims/ — project- and ecosystem-specific headers │
 │   • open-x4-sdk:   EInkDisplay, InputManager, BatteryMonitor, SDCardManager │
 │   • SdFat:         common/FsApiConstants.h                 │
-│   • Arduino-ESP32: WiFi, NetworkClient(Secure), HTTPClient, StreamString, NetworkUdp, WebServer, WebSocketsServer, MD5Builder, esp_ota_ops │
-│   • 3rd-party:     PNGdec, JPEGDEC, base64                 │
-│   Most are no-op/failure stubs; HTTPClient is libcurl-     │
+│   • Arduino-ESP32: WiFi, NetworkClient, StreamString, NetworkUdp, WebServer, WebSocketsServer, MD5Builder, esp_ota_ops │
+│   • ESP-IDF:       esp_http_client, esp_crt_bundle, esp_err│
+│   • 3rd-party:     PNGdec, JPEGDEC, base64, PubSubClient   │
+│   Most are no-op/failure stubs; esp_http_client is libcurl-│
 │   backed (real network — see below). QRCode is fetched,    │
 │   not shimmed.                                             │
 └────────────────────────┬──────────────────────────────────┘
@@ -46,8 +47,8 @@ filesystem for the "SD card".
 
 The boundary between `arduino-host/` and `simulator/shims/` is strict: **arduino-host
 only contains Arduino core + FreeRTOS + ESP-IDF base APIs**. Anything Arduino-ESP32
-ecosystem (WiFi, HTTPClient, OTA, web servers) or third-party (image codecs, base64)
-lives in `simulator/shims/`. The QRCode lib is fetched (`FetchContent`, like
+ecosystem (WiFi, OTA, web servers), ESP-IDF HTTP stack (esp_http_client), or
+third-party (image codecs, base64) lives in `simulator/shims/`. The QRCode lib is fetched (`FetchContent`, like
 ArduinoJson) rather than shimmed, so the real generator runs. That keeps `arduino-host`
 cleanly reusable —
 `grep -rni "crosspoint|xteink|epub|wifi|http|opds|qrcode"` over its tree returns no
@@ -77,7 +78,7 @@ CMake fetches ArduinoJson and `ricmoo/QRCode` via `FetchContent` on first config
 The same firmware also builds to WASM for the crosspoint-web homepage demo, sharing the
 **same HAL sources** as the native build: `hal/HalDisplay.cpp` and `hal/HalGPIO.cpp` carry a
 small `#ifdef __EMSCRIPTEN__` backend (a framebuffer dirty-flag + browser canvas instead of an
-SDL texture; JavaScript events instead of SDL keys), and `shims/HTTPClient.h` compiles a
+SDL texture; JavaScript events instead of SDL keys), and `shims/esp_http_client.h` compiles a
 curl-free offline stub under the same guard. The WASM build sets **ENABLE_CHINESE_VERSION**
 (CJK fonts + WeRead/中国象棋/农历/CJK typography — same as native) and preloads a small
 public-domain book from `sd_root_demo/` into MEMFS at `/sd`. The startup UI language follows the
@@ -86,7 +87,7 @@ browser: `index.html` maps `navigator.language` to a `--lang ZH_CN|EN` arg that
 (pthreads), so the page must be cross-origin isolated (COOP/COEP).
 
 Because the browser build has no libcurl, all networked features are offline: WeRead and any
-other HTTPS path return errors through the HTTPClient stub, so those screens render but fetch
+other HTTPS path return errors through the esp_http_client stub, so those screens render but fetch
 nothing. (Network config / OPDS / KOReader / OTA are out of scope on both builds — see below.)
 
 ```sh
@@ -176,10 +177,11 @@ Save as `simulator/sd_root/.crosspoint/state.json` before launching.
 - Multi-language UI via the `tr()` macro (generated I18nStrings)
 - 1-bpp framebuffer rendering and font system (text-only EPUBs)
 - **WeRead (微信读书) app: real HTTPS to i.weread.qq.com via libcurl.** WiFi
-  shim reports `WL_CONNECTED`; HTTPClient/NetworkClientSecure shims delegate to
-  libcurl on the host. Drop your `wrk-…` API key as plain text into
-  `simulator/sd_root/.crosspoint/weread_apikey_plain.txt` — first boot migrates
-  it to base64-stored `weread_apikey.txt` and deletes the plain seed.
+  shim reports `WL_CONNECTED`; `HttpDownloader::postJson` runs through the
+  esp_http_client shim, which is libcurl-backed on native. Drop your `wrk-…` API
+  key as plain text into `simulator/sd_root/.crosspoint/weread_apikey_plain.txt`
+  — first boot migrates it to base64-stored `weread_apikey.txt` and deletes the
+  plain seed.
 - **AirPage standby face: real QR + real cloud image fetch.** The QR (rendered
   by the real `ricmoo/QRCode` lib) encodes the device's upload URL. Pressing ▼
   runs the real `HttpDownloader` over libcurl, saving the latest image to
@@ -220,10 +222,11 @@ user navigates into them.
   screens in the simulator shows an empty screen rather than crashing.
 - **`simulator/shims/` is mostly a parse-only layer.** Headers like `<PNGdec.h>`
   or `<JPEGDEC.h>` exist so consumer `.cpp` files compile and link, but their
-  methods return an error / empty value. The exception is `<HTTPClient.h>` (and
-  `NetworkClient(Secure)`), which is **libcurl-backed and does real host network
-  I/O** — that's what lets WeRead and the AirPage fetch work. Adding a real codec
-  (libpng wrapper, etc.) would similarly light up the stubbed features.
+  methods return an error / empty value. The exception is `<esp_http_client.h>`
+  (and its `<esp_crt_bundle.h>` companion), which is **libcurl-backed and does
+  real host network I/O** — that's what lets WeRead and the AirPage fetch work.
+  Adding a real codec (libpng wrapper, etc.) would similarly light up the
+  stubbed features.
 
 ## Verifying arduino-host stays project-independent
 

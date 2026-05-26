@@ -50,4 +50,12 @@ class HttpDownloader {
   static DownloadError downloadToFile(const std::string& url, const std::string& destPath,
                                       ProgressCallback progress = nullptr, bool* cancelFlag = nullptr,
                                       const std::string& username = "", const std::string& password = "");
+
+  // application/json POST with Bearer auth. Response body is exposed to
+  // onResponse as a pull-style Stream so the caller (e.g. ArduinoJson) can
+  // deserialize it without buffering. Same TLS posture as fetchUrl: verified
+  // https via the CA bundle, plain http for local servers. Returns false on
+  // any transport / status failure, or if onResponse returns false.
+  static bool postJson(const std::string& url, const std::string& payload, const std::string& bearerToken,
+                       const std::function<bool(Stream&)>& onResponse, int timeoutMs = 60000);
 };

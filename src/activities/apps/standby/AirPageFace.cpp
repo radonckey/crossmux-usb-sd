@@ -404,7 +404,7 @@ bool AirPageFace::renderImage(const GfxRenderer& renderer, const Rect& viewport)
   // Re-open + parse on every call so the BW / GRAYSCALE_LSB / GRAYSCALE_MSB
   // passes each stream the file independently (drawBitmap reads rows
   // sequentially). drawBitmap honors the renderer's current renderMode.
-  FsFile file;
+  HalFile file;
   if (!Storage.openFileForRead("AIRP", kImagePath, file)) return false;
   Bitmap bitmap(file, /*dithering=*/false);
   if (bitmap.parseHeaders() != BmpReaderError::Ok) {

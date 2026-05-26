@@ -1,7 +1,8 @@
 #pragma once
 // Header-only stub for WiFi-aware code on host. The simulator reports a permanently
-// "connected" state so HTTPClient (libcurl-backed) can pass preflight checks like
-// `WiFi.status() == WL_CONNECTED`. The host's real network stack does the actual I/O.
+// "connected" state so callers (HttpDownloader → esp_http_client via libcurl, WeRead,
+// AirPage) pass preflight checks like `WiFi.status() == WL_CONNECTED`. The host's
+// real network stack does the actual I/O.
 
 #include <Print.h>
 #include <WString.h>

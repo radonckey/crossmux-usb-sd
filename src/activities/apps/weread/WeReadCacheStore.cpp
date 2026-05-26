@@ -51,8 +51,8 @@ bool ensureBookDir(const std::string& bookId) {
   return Storage.ensureDirectoryExists(bookDir(bookId).c_str());
 }
 
-// Writes magic + version. Returns the open FsFile (or invalid if open failed).
-bool openWriteWithHeader(const char* mod, const char* path, const char (&magic)[4], uint16_t version, FsFile& outFile) {
+// Writes magic + version. Returns the open HalFile (or invalid if open failed).
+bool openWriteWithHeader(const char* mod, const char* path, const char (&magic)[4], uint16_t version, HalFile& outFile) {
   if (!Storage.openFileForWrite(mod, path, outFile)) {
     LOG_ERR(mod, "openFileForWrite(%s) failed", path);
     return false;
@@ -64,7 +64,7 @@ bool openWriteWithHeader(const char* mod, const char* path, const char (&magic)[
 
 // Opens for read, verifies magic + version, leaves cursor at byte 6.
 bool openReadCheckHeader(const char* mod, const char* path, const char (&magic)[4], uint16_t expectVersion,
-                         FsFile& outFile) {
+                         HalFile& outFile) {
   if (!Storage.exists(path)) return false;
   if (!Storage.openFileForRead(mod, path, outFile)) {
     LOG_ERR(mod, "openFileForRead(%s) failed", path);
@@ -84,7 +84,7 @@ bool openReadCheckHeader(const char* mod, const char* path, const char (&magic)[
   return true;
 }
 
-bool readCount(FsFile& file, uint32_t& outCount) {
+bool readCount(HalFile& file, uint32_t& outCount) {
   if (file.read(reinterpret_cast<uint8_t*>(&outCount), sizeof(outCount)) != sizeof(outCount)) return false;
   if (outCount > kMaxRows) {
     LOG_ERR("WRCACHE", "row count %u exceeds limit", outCount);
@@ -96,7 +96,7 @@ bool readCount(FsFile& file, uint32_t& outCount) {
 // ---- Field-level write helpers (one per Row type) -------------------------
 // Kept inline-friendly so a future schema bump just edits these.
 
-void writeBookCard(FsFile& f, const WeReadModels::BookCard& b) {
+void writeBookCard(HalFile& f, const WeReadModels::BookCard& b) {
   serialization::writeString(f, b.bookId);
   serialization::writeString(f, b.title);
   serialization::writeString(f, b.author);
@@ -108,7 +108,7 @@ void writeBookCard(FsFile& f, const WeReadModels::BookCard& b) {
   serialization::writePod(f, b.isAlbum);
 }
 
-void readBookCard(FsFile& f, WeReadModels::BookCard& b) {
+void readBookCard(HalFile& f, WeReadModels::BookCard& b) {
   serialization::readString(f, b.bookId);
   serialization::readString(f, b.title);
   serialization::readString(f, b.author);
@@ -120,7 +120,7 @@ void readBookCard(FsFile& f, WeReadModels::BookCard& b) {
   serialization::readPod(f, b.isAlbum);
 }
 
-void writeBookmark(FsFile& f, const WeReadModels::BookmarkRow& b) {
+void writeBookmark(HalFile& f, const WeReadModels::BookmarkRow& b) {
   serialization::writeString(f, b.bookmarkId);
   serialization::writeString(f, b.markText);
   serialization::writeString(f, b.range);
@@ -128,7 +128,7 @@ void writeBookmark(FsFile& f, const WeReadModels::BookmarkRow& b) {
   serialization::writePod(f, b.createTime);
 }
 
-void readBookmark(FsFile& f, WeReadModels::BookmarkRow& b) {
+void readBookmark(HalFile& f, WeReadModels::BookmarkRow& b) {
   serialization::readString(f, b.bookmarkId);
   serialization::readString(f, b.markText);
   serialization::readString(f, b.range);
@@ -136,7 +136,7 @@ void readBookmark(FsFile& f, WeReadModels::BookmarkRow& b) {
   serialization::readPod(f, b.createTime);
 }
 
-void writePublicReview(FsFile& f, const WeReadModels::PublicReviewRow& r) {
+void writePublicReview(HalFile& f, const WeReadModels::PublicReviewRow& r) {
   serialization::writeString(f, r.reviewId);
   serialization::writeString(f, r.content);
   serialization::writeString(f, r.authorName);
@@ -147,7 +147,7 @@ void writePublicReview(FsFile& f, const WeReadModels::PublicReviewRow& r) {
   serialization::writePod(f, r.idx);
 }
 
-void readPublicReview(FsFile& f, WeReadModels::PublicReviewRow& r) {
+void readPublicReview(HalFile& f, WeReadModels::PublicReviewRow& r) {
   serialization::readString(f, r.reviewId);
   serialization::readString(f, r.content);
   serialization::readString(f, r.authorName);
@@ -158,7 +158,7 @@ void readPublicReview(FsFile& f, WeReadModels::PublicReviewRow& r) {
   serialization::readPod(f, r.idx);
 }
 
-void writeChapter(FsFile& f, const WeReadModels::ChapterRow& c) {
+void writeChapter(HalFile& f, const WeReadModels::ChapterRow& c) {
   serialization::writeString(f, c.title);
   serialization::writePod(f, c.chapterUid);
   serialization::writePod(f, c.chapterIdx);
@@ -167,7 +167,7 @@ void writeChapter(FsFile& f, const WeReadModels::ChapterRow& c) {
   serialization::writePod(f, c.paid);
 }
 
-void readChapter(FsFile& f, WeReadModels::ChapterRow& c) {
+void readChapter(HalFile& f, WeReadModels::ChapterRow& c) {
   serialization::readString(f, c.title);
   serialization::readPod(f, c.chapterUid);
   serialization::readPod(f, c.chapterIdx);
@@ -176,7 +176,7 @@ void readChapter(FsFile& f, WeReadModels::ChapterRow& c) {
   serialization::readPod(f, c.paid);
 }
 
-void writeBestMark(FsFile& f, const WeReadModels::BestMarkRow& b) {
+void writeBestMark(HalFile& f, const WeReadModels::BestMarkRow& b) {
   serialization::writeString(f, b.bookmarkId);
   serialization::writeString(f, b.markText);
   serialization::writeString(f, b.range);
@@ -184,7 +184,7 @@ void writeBestMark(FsFile& f, const WeReadModels::BestMarkRow& b) {
   serialization::writePod(f, b.totalCount);
 }
 
-void readBestMark(FsFile& f, WeReadModels::BestMarkRow& b) {
+void readBestMark(HalFile& f, WeReadModels::BestMarkRow& b) {
   serialization::readString(f, b.bookmarkId);
   serialization::readString(f, b.markText);
   serialization::readString(f, b.range);
@@ -192,7 +192,7 @@ void readBestMark(FsFile& f, WeReadModels::BestMarkRow& b) {
   serialization::readPod(f, b.totalCount);
 }
 
-void writeSearchRow(FsFile& f, const WeReadModels::SearchRow& r) {
+void writeSearchRow(HalFile& f, const WeReadModels::SearchRow& r) {
   serialization::writeString(f, r.bookId);
   serialization::writeString(f, r.title);
   serialization::writeString(f, r.author);
@@ -204,7 +204,7 @@ void writeSearchRow(FsFile& f, const WeReadModels::SearchRow& r) {
   serialization::writePod(f, r.searchIdx);
 }
 
-void readSearchRow(FsFile& f, WeReadModels::SearchRow& r) {
+void readSearchRow(HalFile& f, WeReadModels::SearchRow& r) {
   serialization::readString(f, r.bookId);
   serialization::readString(f, r.title);
   serialization::readString(f, r.author);
@@ -224,7 +224,7 @@ bool saveShelf(const std::vector<WeReadModels::BookCard>& books) {
   if (!Storage.ensureDirectoryExists(kRoot)) return false;
   std::string path = std::string(kRoot) + "/shelf.bin";
 
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicShelf, kVersionShelf, f)) return false;
 
   uint32_t count = static_cast<uint32_t>(books.size());
@@ -239,7 +239,7 @@ bool loadShelf(std::vector<WeReadModels::BookCard>& outBooks) {
   outBooks.clear();
   std::string path = std::string(kRoot) + "/shelf.bin";
 
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicShelf, kVersionShelf, f)) return false;
 
   uint32_t count = 0;
@@ -259,7 +259,7 @@ bool saveBookMeta(const std::string& bookId, const WeReadModels::BookCard& card)
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "meta.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicMeta, kVersionMeta, f)) return false;
   writeBookCard(f, card);
   f.flush();
@@ -270,7 +270,7 @@ bool loadBookMeta(const std::string& bookId, WeReadModels::BookCard& outCard) {
   outCard = WeReadModels::BookCard{};
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "meta.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicMeta, kVersionMeta, f)) return false;
   readBookCard(f, outCard);
   return true;
@@ -282,7 +282,7 @@ bool saveNotes(const std::string& bookId, const std::vector<WeReadModels::Bookma
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "notes.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicNotes, kVersionNotes, f)) return false;
   uint32_t count = static_cast<uint32_t>(rows.size());
   serialization::writePod(f, count);
@@ -296,7 +296,7 @@ bool loadNotes(const std::string& bookId, std::vector<WeReadModels::BookmarkRow>
   outRows.clear();
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "notes.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicNotes, kVersionNotes, f)) return false;
   uint32_t count = 0;
   if (!readCount(f, count)) return false;
@@ -315,7 +315,7 @@ bool savePublicReviews(const std::string& bookId, const std::vector<WeReadModels
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "reviews_public.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicPubRv, kVersionPublicReviews, f)) return false;
   uint32_t count = static_cast<uint32_t>(rows.size());
   serialization::writePod(f, count);
@@ -328,7 +328,7 @@ bool loadPublicReviews(const std::string& bookId, std::vector<WeReadModels::Publ
   outRows.clear();
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "reviews_public.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicPubRv, kVersionPublicReviews, f)) return false;
   uint32_t count = 0;
   if (!readCount(f, count)) return false;
@@ -347,7 +347,7 @@ bool saveChapters(const std::string& bookId, const std::vector<WeReadModels::Cha
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "chapters.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicChap, kVersionChapters, f)) return false;
   uint32_t count = static_cast<uint32_t>(rows.size());
   serialization::writePod(f, count);
@@ -360,7 +360,7 @@ bool loadChapters(const std::string& bookId, std::vector<WeReadModels::ChapterRo
   outRows.clear();
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "chapters.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicChap, kVersionChapters, f)) return false;
   uint32_t count = 0;
   if (!readCount(f, count)) return false;
@@ -379,7 +379,7 @@ bool saveBestMarks(const std::string& bookId, const std::vector<WeReadModels::Be
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "bestmarks.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicBest, kVersionBestMarks, f)) return false;
   uint32_t count = static_cast<uint32_t>(rows.size());
   serialization::writePod(f, count);
@@ -392,7 +392,7 @@ bool loadBestMarks(const std::string& bookId, std::vector<WeReadModels::BestMark
   outRows.clear();
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "bestmarks.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicBest, kVersionBestMarks, f)) return false;
   uint32_t count = 0;
   if (!readCount(f, count)) return false;
@@ -411,7 +411,7 @@ bool saveSimilar(const std::string& bookId, const std::vector<WeReadModels::Sear
   if (bookId.empty()) return false;
   if (!ensureBookDir(bookId)) return false;
   std::string path = bookFile(bookId, "similar.bin");
-  FsFile f;
+  HalFile f;
   if (!openWriteWithHeader("WRCACHE", path.c_str(), kMagicSim, kVersionSimilar, f)) return false;
   uint32_t count = static_cast<uint32_t>(rows.size());
   serialization::writePod(f, count);
@@ -424,7 +424,7 @@ bool loadSimilar(const std::string& bookId, std::vector<WeReadModels::SearchRow>
   outRows.clear();
   if (bookId.empty()) return false;
   std::string path = bookFile(bookId, "similar.bin");
-  FsFile f;
+  HalFile f;
   if (!openReadCheckHeader("WRCACHE", path.c_str(), kMagicSim, kVersionSimilar, f)) return false;
   uint32_t count = 0;
   if (!readCount(f, count)) return false;

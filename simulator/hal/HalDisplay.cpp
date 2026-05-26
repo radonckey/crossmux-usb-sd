@@ -140,6 +140,14 @@ void HalDisplay::displayGrayBuffer(bool /*turnOffScreen*/) {
   // showing.
 }
 
+// Tiled grayscale (X4) is a controller-level optimization that streams gray bit-plane bands
+// straight to RAM. The simulator has no real controller and only a 1-bpp framebuffer, so report
+// it unsupported — EpubReaderActivity falls back to the legacy whole-frame grayscale path, which
+// is already a no-op above.
+void HalDisplay::writeGrayscalePlaneStrip(bool /*lsbPlane*/, const uint8_t* /*rows*/, uint16_t /*yStart*/,
+                                          uint16_t /*numRows*/) {}
+bool HalDisplay::supportsStripGrayscale() const { return false; }
+
 uint16_t HalDisplay::getDisplayWidth() const { return DISPLAY_WIDTH; }
 uint16_t HalDisplay::getDisplayHeight() const { return DISPLAY_HEIGHT; }
 uint16_t HalDisplay::getDisplayWidthBytes() const { return DISPLAY_WIDTH_BYTES; }

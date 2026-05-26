@@ -13,7 +13,7 @@
 // silently return failure/empty values — fine for the first-version simulator scope
 // (boot → home → file browse → EPUB text without images).
 
-#include <HalStorage.h>  // FsFile (alias of HalFile)
+#include <HalStorage.h>  // HalFile (alias of HalFile)
 #include <Logging.h>
 #include <WiFi.h>
 
@@ -53,15 +53,15 @@ unsigned int uzlib_crc32(const void*, unsigned int, unsigned int prev) { return 
 
 #include "PngToBmpConverter.h"
 
-bool PngToBmpConverter::pngFileToBmpStream(FsFile&, Print&, bool) { return false; }
-bool PngToBmpConverter::pngFileToBmpStreamWithSize(FsFile&, Print&, int, int) { return false; }
-bool PngToBmpConverter::pngFileTo1BitBmpStreamWithSize(FsFile&, Print&, int, int) { return false; }
+bool PngToBmpConverter::pngFileToBmpStream(HalFile&, Print&, bool) { return false; }
+bool PngToBmpConverter::pngFileToBmpStreamWithSize(HalFile&, Print&, int, int) { return false; }
+bool PngToBmpConverter::pngFileTo1BitBmpStreamWithSize(HalFile&, Print&, int, int) { return false; }
 
 #include "JpegToBmpConverter.h"
 
-bool JpegToBmpConverter::jpegFileToBmpStream(FsFile&, Print&, bool) { return false; }
-bool JpegToBmpConverter::jpegFileToBmpStreamWithSize(FsFile&, Print&, int, int) { return false; }
-bool JpegToBmpConverter::jpegFileTo1BitBmpStreamWithSize(FsFile&, Print&, int, int) { return false; }
+bool JpegToBmpConverter::jpegFileToBmpStream(HalFile&, Print&, bool) { return false; }
+bool JpegToBmpConverter::jpegFileToBmpStreamWithSize(HalFile&, Print&, int, int) { return false; }
+bool JpegToBmpConverter::jpegFileTo1BitBmpStreamWithSize(HalFile&, Print&, int, int) { return false; }
 
 #include "Epub/converters/ImageDecoderFactory.h"
 
