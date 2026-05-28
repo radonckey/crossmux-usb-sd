@@ -10,13 +10,13 @@
 //
 // The public surface mirrors only what HttpDownloader.cpp actually calls.
 
-#include "esp_err.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string>
 #include <vector>
+
+#include "esp_err.h"
 
 #ifndef __EMSCRIPTEN__
 #include <curl/curl.h>

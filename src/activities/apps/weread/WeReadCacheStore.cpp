@@ -52,7 +52,8 @@ bool ensureBookDir(const std::string& bookId) {
 }
 
 // Writes magic + version. Returns the open HalFile (or invalid if open failed).
-bool openWriteWithHeader(const char* mod, const char* path, const char (&magic)[4], uint16_t version, HalFile& outFile) {
+bool openWriteWithHeader(const char* mod, const char* path, const char (&magic)[4], uint16_t version,
+                         HalFile& outFile) {
   if (!Storage.openFileForWrite(mod, path, outFile)) {
     LOG_ERR(mod, "openFileForWrite(%s) failed", path);
     return false;
