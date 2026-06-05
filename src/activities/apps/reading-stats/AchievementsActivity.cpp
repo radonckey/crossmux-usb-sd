@@ -12,7 +12,12 @@
 #include "util/HeaderDateUtils.h"
 
 namespace {
-constexpr int ROW_HEIGHT = 60;  // tall enough for the lowered description to sit inside the selection box
+// Selection box must fully enclose the row's lowest ink (the description). With the description drawn
+// at titleTop(+8) + getLineHeight(UI_10)=30, its baseline is +58 and the SMALL-font descender reaches
+// +63 below the row top, so the box needs height >= 64; 66 leaves a 2px bottom margin.
+constexpr int ROW_GAP = 4;                           // gap between consecutive rows
+constexpr int ROW_BOX_HEIGHT = 66;                   // selection box height (encloses title + description)
+constexpr int ROW_STEP = ROW_BOX_HEIGHT + ROW_GAP;   // vertical advance per row / visible-row math
 constexpr int ICON_BOX_SIZE = 24;
 
 std::string formatDurationCompact(const uint64_t totalMs) {
@@ -191,20 +196,20 @@ void AchievementsActivity::render(RenderLock&&) {
                               emptyStateLabel(selectedTab == FilterTab::Completed));
   } else {
     int firstVisibleIndex = 0;
-    const int maxVisibleRows = std::max(1, viewportHeight / ROW_HEIGHT);
+    const int maxVisibleRows = std::max(1, viewportHeight / ROW_STEP);
     if (selectedIndex >= maxVisibleRows) {
       firstVisibleIndex = selectedIndex - maxVisibleRows + 1;
     }
 
     int currentY = contentTop;
     for (int visibleIndex = firstVisibleIndex; visibleIndex < static_cast<int>(visibleIndexes.size()); ++visibleIndex) {
-      if (currentY + ROW_HEIGHT > contentTop + viewportHeight) {
+      if (currentY + ROW_BOX_HEIGHT > contentTop + viewportHeight) {
         break;
       }
 
       const auto& entry = achievements[visibleIndexes[visibleIndex]];
       const bool selected = visibleIndex == selectedIndex;
-      const Rect rowRect{sidePadding, currentY, rowWidth, ROW_HEIGHT - 4};
+      const Rect rowRect{sidePadding, currentY, rowWidth, ROW_BOX_HEIGHT};
       if (selected) {
         renderer.fillRectDither(rowRect.x, rowRect.y, rowRect.width, rowRect.height, Color::LightGray);
         renderer.drawRect(rowRect.x, rowRect.y, rowRect.width, rowRect.height);
@@ -240,7 +245,7 @@ void AchievementsActivity::render(RenderLock&&) {
       renderer.drawText(UI_10_FONT_ID, rowRect.x + rowRect.width - progressWidth - 10, rowRect.y + 18, progress.c_str(),
                         true, EpdFontFamily::REGULAR);
 
-      currentY += ROW_HEIGHT;
+      currentY += ROW_STEP;
     }
   }
 
