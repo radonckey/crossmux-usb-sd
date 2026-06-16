@@ -4,7 +4,7 @@
 
 **CrossMux** is a community fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) that turns the device into more than a reader — it adds an Apps hub of mini-games and tools, richer standby faces, and a first-class Simplified Chinese build.
 
-**Version:** CrossMux 1.3.0 (based on CrossPoint Reader 1.3.0)
+**Version:** CrossMux 1.3.5 (based on CrossPoint Reader 1.3.0)
 
 **Now running on:** ESP32C3-based Xteink [X4](https://www.xteink.com/products/xteink-x4) and [X3](https://www.xteink.com/products/xteink-x3).
 
@@ -12,9 +12,10 @@
 
 What CrossMux adds on top of upstream:
 
-- **Apps hub** (the `Apps` menu): 2048, Minesweeper, Sudoku, Gomoku (五子棋), Chinese Chess / Xiangqi (象棋), Conway's Game of Life, and a procedural "Ugly Avatar" generator.
+- **Apps hub** (the `Apps` menu): 2048, Minesweeper, Sudoku, Gomoku (五子棋), Chinese Chess / Xiangqi (象棋), Conway's Game of Life, and a procedural "Ugly Avatar" generator. The menu paginates with page dots once the apps overflow a single screen.
 - **WeRead Copilot** (微信读书): browse your shelf, notes, and reviews with an SD-backed offline cache and bulk sync.
-- **Standby faces**: a hand-drawn "sloppy" clock and a Chinese almanac/calendar face (老黄历), plus optional 4-level grayscale and inverse display modes.
+- **Reading analytics**: reading stats, a monthly reading heatmap, a reading profile, and achievements — backed by an SD-stored JSON history.
+- **Standby faces**: a hand-drawn "sloppy" clock and a Chinese almanac/calendar face (老黄历), plus **AirPage** — a cloud-backed face that shows a QR code to its upload page and fetches a cloud-rendered image over Wi-Fi (manual or live MQTT push), shown full-screen in 4-level grayscale and cached on SD. Optional 4-level grayscale and inverse display modes throughout.
 - **Simplified Chinese firmware** (`gh_release_cn`): Chinese UI + i18n, embedded CJK fonts, and CJK-aware EPUB layout (word breaking and line-break rules). See [Build the Simplified Chinese firmware](#build-the-simplified-chinese-firmware).
 - **Desktop / WebAssembly simulator** for developing and previewing the UI on the host.
 

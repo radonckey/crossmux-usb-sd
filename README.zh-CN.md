@@ -4,7 +4,7 @@
 
 **CrossMux** 是 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) 的社区 fork：在原有电子书阅读体验之上，新增了一个 Apps 应用中心（小游戏 / 小工具）、更丰富的待机表盘，以及一套完整的简体中文固件。
 
-**版本：** CrossMux 1.3.0（基于 CrossPoint Reader 1.3.0）
+**版本：** CrossMux 1.3.5（基于 CrossPoint Reader 1.3.0）
 
 **运行设备：** 基于 ESP32-C3 的 Xteink [X4](https://www.xteink.com/products/xteink-x4) 与 [X3](https://www.xteink.com/products/xteink-x3)。
 
@@ -16,9 +16,10 @@
 
 ## CrossMux 相比上游新增了什么
 
-- **Apps 应用中心**（首页的 `Apps` 菜单）：2048、扫雷、数独、五子棋、中国象棋、康威生命游戏，以及一个程序化生成的「Ugly Avatar」头像生成器。
+- **Apps 应用中心**（首页的 `Apps` 菜单）：2048、扫雷、数独、五子棋、中国象棋、康威生命游戏，以及一个程序化生成的「Ugly Avatar」头像生成器。应用超过一屏时以页点分页。
 - **微信读书 Copilot**：浏览书架、笔记与书评，支持 SD 卡离线缓存与批量同步。
-- **待机表盘**：手绘风格的「潦草时钟」与中式老黄历表盘，另有可选的 4 级灰度增强与反色显示模式。
+- **阅读分析**：阅读统计、按月阅读热力图、阅读档案与成就，数据以 JSON 存于 SD 卡。
+- **待机表盘**：手绘风格的「潦草时钟」与中式老黄历表盘，以及 **AirPage** 云端表盘——展示指向上传页的二维码，联网拉取云端渲染图（手动或 MQTT 实时推送），以 4 级灰度全屏显示并缓存到 SD 卡。整体另有可选的 4 级灰度增强与反色显示模式。
 - **简体中文固件**（`gh_release_cn`）：中文 UI + i18n、内嵌 CJK 字体、面向中文的 EPUB 排版（断词与禁则等）。详见下方 [编译简体中文固件](#编译简体中文固件)。
 - **桌面 / WebAssembly 模拟器**：可在电脑上开发与预览 UI。
 
