@@ -14,10 +14,20 @@
 void LanguageSelectActivity::onEnter() {
   Activity::onEnter();
 
+  // Build the list of languages this build can actually render, so the global
+  // build doesn't list (and let users pick) ZH_CN, whose name itself renders as
+  // garbled boxes without the CJK font.
+  totalItems = 0;
+  for (const uint8_t langIndex : SORTED_LANGUAGE_INDICES) {
+    if (I18n::isLanguageAvailable(static_cast<Language>(langIndex))) {
+      visibleIndices[totalItems++] = langIndex;
+    }
+  }
+
   // Set current selection based on current language
   const auto currentLang = static_cast<uint8_t>(I18N.getLanguage());
-  const auto* begin = std::begin(SORTED_LANGUAGE_INDICES);
-  const auto* end = std::end(SORTED_LANGUAGE_INDICES);
+  const auto* begin = visibleIndices;
+  const auto* end = visibleIndices + totalItems;
   const auto* it = std::find(begin, end, currentLang);
   selectedIndex = (it != end) ? std::distance(begin, it) : 0;
 
@@ -62,7 +72,7 @@ void LanguageSelectActivity::loop() {
 }
 
 void LanguageSelectActivity::handleSelection() {
-  const uint8_t langIndex = SORTED_LANGUAGE_INDICES[selectedIndex];
+  const uint8_t langIndex = visibleIndices[selectedIndex];
 
   {
     RenderLock lock(*this);
@@ -91,9 +101,8 @@ void LanguageSelectActivity::render(RenderLock&&) {
   const auto currentLang = static_cast<uint8_t>(I18N.getLanguage());
   GUI.drawList(
       renderer, Rect{0, contentTop, pageWidth, contentHeight}, totalItems, selectedIndex,
-      [this](int index) { return I18N.getLanguageName(static_cast<Language>(SORTED_LANGUAGE_INDICES[index])); },
-      nullptr, nullptr,
-      [this, currentLang](int index) { return SORTED_LANGUAGE_INDICES[index] == currentLang ? tr(STR_SELECTED) : ""; },
+      [this](int index) { return I18N.getLanguageName(static_cast<Language>(visibleIndices[index])); }, nullptr,
+      nullptr, [this, currentLang](int index) { return visibleIndices[index] == currentLang ? tr(STR_SELECTED) : ""; },
       true);
 
   // Button hints

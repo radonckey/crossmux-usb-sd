@@ -25,6 +25,11 @@ class I18n {
   const char* getLanguageName(Language lang) const;
   static Language languageFromCode(const char* code);
 
+  // True if this build can actually render `lang`. A language whose strings are
+  // compiled in but whose glyphs are not (e.g. ZH_CN in the non-CJK global
+  // build) would render as garbled boxes, so it is reported as unavailable.
+  static bool isLanguageAvailable(Language lang);
+
   // Get all unique characters used in a specific language
   // Returns a sorted string of unique characters
   static const char* getCharacterSet(Language lang);

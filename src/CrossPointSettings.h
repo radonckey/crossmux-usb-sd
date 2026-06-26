@@ -18,14 +18,15 @@ class CrossPointSettings {
   // Static instance
   static CrossPointSettings instance;
 
-  // Returns the SKU-appropriate first-boot Language enum index. Defined in
-  // CrossPointSettings.cpp so I18nKeys.h stays out of this header.
-  static uint8_t defaultLanguageIndex();
-
  public:
   // Delete copy constructor and assignment
   CrossPointSettings(const CrossPointSettings&) = delete;
   CrossPointSettings& operator=(const CrossPointSettings&) = delete;
+
+  // Returns the SKU-appropriate first-boot/fallback Language enum index. Defined
+  // in CrossPointSettings.cpp so I18nKeys.h stays out of this header. Public so
+  // the settings loader can reset to this build's default on a cross-SKU reflash.
+  static uint8_t defaultLanguageIndex();
 
   enum SLEEP_SCREEN_MODE {
     DARK = 0,

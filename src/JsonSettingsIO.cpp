@@ -21,6 +21,15 @@
 
 namespace {
 
+// Firmware language SKU marker, persisted in settings.json. Lets the next boot
+// detect a cross-SKU reflash (CN <-> global) and reset the UI language to this
+// build's default — see loadSettings().
+#ifdef ENABLE_CHINESE_VERSION
+constexpr char BUILD_LANG_SKU[] = "cn";
+#else
+constexpr char BUILD_LANG_SKU[] = "global";
+#endif
+
 // Atomic JSON write: serialize (streamed) to "<path>.tmp", then rename over the
 // target so a power loss mid-write never corrupts the existing file. Streaming
 // keeps peak heap bounded for large documents (e.g. reading_stats.json).
@@ -207,10 +216,8 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   // Language -- managed by LanguageSelectActivity, not in SettingsList.
   // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
   doc["language"] = (s.language < getLanguageCount()) ? LANGUAGE_CODES[s.language] : "EN";
-
-  // Language -- managed by LanguageSelectActivity, not in SettingsList.
-  // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
-  doc["language"] = (s.language < getLanguageCount()) ? LANGUAGE_CODES[s.language] : "EN";
+  // Build SKU marker so the next boot can detect a cross-SKU reflash.
+  doc["langSku"] = BUILD_LANG_SKU;
 
   String json;
   serializeJson(doc, json);
@@ -318,6 +325,28 @@ bool JsonSettingsIO::loadSettings(CrossPointSettings& s, const char* json, bool*
   if (doc["language"].is<const char*>()) {
     s.language = static_cast<uint8_t>(I18n::languageFromCode(doc["language"].as<const char*>()));
   }
+
+  // Cross-SKU reflash recovery. settings.json survives a firmware flash, so a
+  // language chosen under one SKU can linger into another (e.g. "ZH_CN" left by
+  // the Chinese build now loaded by the global build, which has no CJK font ->
+  // garbled). The langSku marker tells us which SKU last wrote this file:
+  //   - present & different  -> cross-SKU reflash; reset to this build's default
+  //                             (EN on global, ZH_CN on CN), regardless of choice.
+  //   - missing (pre-feature file) -> treat as same SKU; do NOT clobber a
+  //                             deliberate choice. The renderability check below
+  //                             still rescues an unrenderable leftover language.
+  const char* langSku = doc["langSku"] | "";
+  const bool skuMatches = langSku[0] != '\0' && strcmp(langSku, BUILD_LANG_SKU) == 0;
+  if (langSku[0] != '\0' && !skuMatches) {
+    s.language = CrossPointSettings::defaultLanguageIndex();
+  }
+  // Safety net independent of the marker: never keep a language this build can't
+  // render (catches the marker-less CN->global case from existing devices).
+  if (!I18n::isLanguageAvailable(static_cast<Language>(s.language))) {
+    s.language = CrossPointSettings::defaultLanguageIndex();
+  }
+  // Record / refresh the current SKU marker so the next reflash is detectable.
+  if (!skuMatches && needsResave) *needsResave = true;
 
   LOG_DBG("CPS", "Settings loaded from file");
 
