@@ -14,6 +14,7 @@ build
 /.cache
 .history/
 **/.venv/
+/.venv-pio/
 *.local*
 *.cpfont
 lib/EpdFont/scripts/downloaded_fonts/

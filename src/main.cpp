@@ -2,6 +2,7 @@
 #include <Epub.h>
 #include <FontCacheManager.h>
 #include <FontDecompressor.h>
+#include <FsHelpers.h>
 #include <GfxRenderer.h>
 #include <HalClock.h>
 #include <HalDisplay.h>
@@ -16,7 +17,11 @@
 #include <WiFi.h>
 #include <builtinFonts/all.h>
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <cstring>
+#include <string>
 
 #include "AchievementsStore.h"
 #include "CrossPointSettings.h"
@@ -43,6 +48,209 @@ FontDecompressor fontDecompressor;
 SdCardFontSystem sdFontSystem;
 FontCacheManager fontCacheManager(renderer.getFontMap(), renderer.getSdCardFonts());
 static unsigned long allowSleepAt = 0;
+
+namespace {
+constexpr size_t SERIAL_SD_CHUNK_SIZE = 256;
+constexpr size_t SERIAL_SD_MAX_READ_BYTES = 4096;
+
+String normalizeSerialSdPath(const String& path) {
+  if (path.isEmpty()) return "/";
+
+  std::string normalized = FsHelpers::normalisePath(path.c_str());
+  String result = normalized.c_str();
+  if (result.isEmpty()) return "/";
+  if (!result.startsWith("/")) result = "/" + result;
+  return result;
+}
+
+String nextSerialToken(String& rest) {
+  rest.trim();
+  const int space = rest.indexOf(' ');
+  if (space < 0) {
+    String token = rest;
+    rest = "";
+    return token;
+  }
+
+  String token = rest.substring(0, space);
+  rest = rest.substring(space + 1);
+  return token;
+}
+
+int hexValue(const char c) {
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return -1;
+}
+
+void writeByteAsHex(const uint8_t value) {
+  static constexpr char HEX_DIGITS[] = "0123456789ABCDEF";
+  logSerial.write(static_cast<uint8_t>(HEX_DIGITS[value >> 4]));
+  logSerial.write(static_cast<uint8_t>(HEX_DIGITS[value & 0x0F]));
+}
+
+bool writeHexToFile(const String& path, const String& hex, const bool append) {
+  HalFile file = Storage.open(path.c_str(), append ? (O_WRITE | O_CREAT | O_APPEND) : (O_WRITE | O_CREAT | O_TRUNC));
+  if (!file) return false;
+
+  uint8_t buffer[SERIAL_SD_CHUNK_SIZE];
+  size_t used = 0;
+  int pendingNibble = -1;
+
+  for (size_t i = 0; i < hex.length(); ++i) {
+    const char c = hex.charAt(i);
+    if (std::isspace(static_cast<unsigned char>(c))) continue;
+
+    const int nibble = hexValue(c);
+    if (nibble < 0) {
+      file.close();
+      return false;
+    }
+
+    if (pendingNibble < 0) {
+      pendingNibble = nibble;
+      continue;
+    }
+
+    buffer[used++] = static_cast<uint8_t>((pendingNibble << 4) | nibble);
+    pendingNibble = -1;
+    if (used == sizeof(buffer)) {
+      if (file.write(buffer, used) != used) {
+        file.close();
+        return false;
+      }
+      used = 0;
+    }
+  }
+
+  if (pendingNibble >= 0) {
+    file.close();
+    return false;
+  }
+  if (used > 0 && file.write(buffer, used) != used) {
+    file.close();
+    return false;
+  }
+  file.close();
+  return true;
+}
+
+void handleSerialSdList(String rest) {
+  const String path = normalizeSerialSdPath(rest.length() ? rest : "/");
+  HalFile dir = Storage.open(path.c_str(), O_RDONLY);
+  if (!dir || !dir.isDirectory()) {
+    logSerial.printf("SDERR:LS:%s\n", path.c_str());
+    return;
+  }
+
+  logSerial.printf("SDOK:LS:%s\n", path.c_str());
+  while (true) {
+    HalFile entry = dir.openNextFile();
+    if (!entry) break;
+
+    char name[256] = {0};
+    entry.getName(name, sizeof(name));
+    logSerial.printf("SDENTRY:%c:%llu:%s\n", entry.isDirectory() ? 'D' : 'F',
+                     static_cast<unsigned long long>(entry.fileSize64()), name);
+    entry.close();
+  }
+  dir.close();
+  logSerial.printf("SDEND:LS\n");
+}
+
+void handleSerialSdStat(String rest) {
+  const String path = normalizeSerialSdPath(rest);
+  HalFile file = Storage.open(path.c_str(), O_RDONLY);
+  if (!file) {
+    logSerial.printf("SDERR:STAT:%s\n", path.c_str());
+    return;
+  }
+
+  logSerial.printf("SDOK:STAT:%c:%llu:%s\n", file.isDirectory() ? 'D' : 'F',
+                   static_cast<unsigned long long>(file.fileSize64()), path.c_str());
+  file.close();
+}
+
+void handleSerialSdRead(String rest) {
+  const String path = normalizeSerialSdPath(nextSerialToken(rest));
+  const String offsetToken = nextSerialToken(rest);
+  const String maxToken = nextSerialToken(rest);
+  const uint64_t offset = offsetToken.length() ? strtoull(offsetToken.c_str(), nullptr, 10) : 0;
+  size_t maxBytes = maxToken.length() ? strtoul(maxToken.c_str(), nullptr, 10) : SERIAL_SD_MAX_READ_BYTES;
+  if (maxBytes > SERIAL_SD_MAX_READ_BYTES) maxBytes = SERIAL_SD_MAX_READ_BYTES;
+
+  HalFile file = Storage.open(path.c_str(), O_RDONLY);
+  if (!file || file.isDirectory() || !file.seek64(offset)) {
+    logSerial.printf("SDERR:READ:%s\n", path.c_str());
+    return;
+  }
+
+  uint8_t buffer[SERIAL_SD_CHUNK_SIZE];
+  size_t total = 0;
+  logSerial.printf("SDOK:READ:%s:%llu:%u\n", path.c_str(), static_cast<unsigned long long>(offset),
+                   static_cast<unsigned>(maxBytes));
+  while (total < maxBytes && file.available() > 0) {
+    const size_t wanted = std::min(sizeof(buffer), maxBytes - total);
+    const int got = file.read(buffer, wanted);
+    if (got <= 0) break;
+
+    logSerial.print("SDDATA:");
+    for (int i = 0; i < got; ++i) writeByteAsHex(buffer[i]);
+    logSerial.print("\n");
+    total += static_cast<size_t>(got);
+  }
+  logSerial.printf("SDEND:READ:%u\n", static_cast<unsigned>(total));
+  file.close();
+}
+
+void handleSerialSdWrite(String rest, const bool append) {
+  const String path = normalizeSerialSdPath(nextSerialToken(rest));
+  rest.trim();
+  if (path == "/" || rest.isEmpty()) {
+    logSerial.printf("SDERR:%s:ARGS\n", append ? "APPEND" : "WRITE");
+    return;
+  }
+
+  if (!writeHexToFile(path, rest, append)) {
+    logSerial.printf("SDERR:%s:%s\n", append ? "APPEND" : "WRITE", path.c_str());
+    return;
+  }
+  logSerial.printf("SDOK:%s:%s\n", append ? "APPEND" : "WRITE", path.c_str());
+}
+
+void handleSerialSdCommand(String cmd) {
+  const String op = nextSerialToken(cmd);
+  if (op == "SDLS") {
+    handleSerialSdList(cmd);
+  } else if (op == "SDSTAT") {
+    handleSerialSdStat(cmd);
+  } else if (op == "SDREAD") {
+    handleSerialSdRead(cmd);
+  } else if (op == "SDWRITE") {
+    handleSerialSdWrite(cmd, false);
+  } else if (op == "SDAPPEND") {
+    handleSerialSdWrite(cmd, true);
+  } else if (op == "SDMKDIR") {
+    const String path = normalizeSerialSdPath(cmd);
+    logSerial.printf("%s:MKDIR:%s\n", Storage.mkdir(path.c_str()) ? "SDOK" : "SDERR", path.c_str());
+  } else if (op == "SDDEL") {
+    const String path = normalizeSerialSdPath(cmd);
+    HalFile file = Storage.open(path.c_str(), O_RDONLY);
+    if (!file) {
+      logSerial.printf("SDERR:DEL:%s\n", path.c_str());
+      return;
+    }
+
+    const bool isDir = file.isDirectory();
+    file.close();
+    const bool ok = isDir ? Storage.rmdir(path.c_str()) : Storage.remove(path.c_str());
+    logSerial.printf("%s:DEL:%s\n", ok ? "SDOK" : "SDERR", path.c_str());
+  } else {
+    logSerial.printf("SDERR:UNKNOWN:%s\n", op.c_str());
+  }
+}
+}  // namespace
 
 // Fonts
 #ifdef ENABLE_CHINESE_VERSION
@@ -630,6 +838,8 @@ void loop() {
         uint8_t* buf = display.getFrameBuffer();
         logSerial.write(buf, bufferSize);
         logSerial.printf("SCREENSHOT_END\n");
+      } else if (cmd.startsWith("SD")) {
+        handleSerialSdCommand(cmd);
       }
     }
   }
