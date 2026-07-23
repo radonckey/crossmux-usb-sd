@@ -8,6 +8,18 @@
 
 This fork adds a compact serial command protocol for listing, reading, writing, and managing files on the device's SD card over USB. The companion scripts in `tools/` provide command-line access and chunked file copying with optional read-back verification.
 
+### Copy a file with `crossmux_copy.py`
+
+Connect the reader over USB, then run the script from the repository root:
+
+```bash
+python3 tools/crossmux_copy.py ~/Documents/example.txt /example.txt
+```
+
+The first path is the **local source file** on your computer. Replace `~/Documents/example.txt` with the actual path to the file you want to copy; for example, macOS and Linux paths commonly start with `~/` or `/home/...`. The second path is the **destination on the reader's SD card** and must start with `/`.
+
+The script automatically uses the first `/dev/cu.usbmodem*` port it finds, copies the file in small chunks, and verifies it by reading it back. Use `--port /dev/cu.usbmodemXXXX` to select a specific serial port, or `--no-verify` to skip read-back verification.
+
 **Version:** CrossMux 1.4.0 (based on CrossPoint Reader 1.4.0)
 
 **Now running on:** ESP32C3-based Xteink [X4](https://www.xteink.com/products/xteink-x4) and [X3](https://www.xteink.com/products/xteink-x3).

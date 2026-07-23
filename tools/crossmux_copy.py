@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Copy a local file to Crossmux SD card over the patched serial SD protocol.
 
-Default:
-  crossmux_copy.py ~/Documents/0709.txt /0709.txt
+Usage:
+  crossmux_copy.py ~/Documents/example.txt /example.txt
 
 This script intentionally writes in small chunks because long single-line
 serial commands can be truncated on the ESP32-C3 CDC serial path.
@@ -51,8 +51,8 @@ def write_chunk(script_dir: Path, port: str, dst: str, chunk: bytes, append: boo
 
 def main():
     parser = argparse.ArgumentParser(description='Copy a local file to Crossmux SD card over USB serial')
-    parser.add_argument('src', nargs='?', default='/Users/mmm2/Documents/0709.txt', help='local source file')
-    parser.add_argument('dst', nargs='?', default='/0709.txt', help='Crossmux SD destination path, e.g. /0709.txt or /med/a.txt')
+    parser.add_argument('src', help='local source file')
+    parser.add_argument('dst', help='Crossmux SD destination path, e.g. /example.txt or /med/a.txt')
     parser.add_argument('--port', default=None, help='serial port, default: first /dev/cu.usbmodem*')
     parser.add_argument('--chunk-size', type=int, default=48, help='bytes per serial write command')
     parser.add_argument('--no-verify', action='store_true', help='skip read-back verification')
