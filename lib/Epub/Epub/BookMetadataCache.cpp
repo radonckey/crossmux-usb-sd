@@ -10,12 +10,16 @@
 #include "FsHelpers.h"
 
 namespace {
+<<<<<<< HEAD
 // v9: TOC/book titles stored NFC-composed (upstream NFC normalization). The byte
 // layout is identical to the fork's v8 and upstream's v8 (both added the `language`
 // field), but those two v8 lineages stored titles un-normalized; the `!=` version
 // check cannot tell "same number, NFC vs non-NFC" apart, so bump to 9 to force a
 // one-time clean re-parse that re-composes existing caches' titles to NFC.
 constexpr uint8_t BOOK_CACHE_VERSION = 9;
+=======
+constexpr uint8_t BOOK_CACHE_VERSION = 8;  // v8: TOC/book titles stored NFC-composed
+>>>>>>> upstream/master
 constexpr char bookBinFile[] = "/book.bin";
 constexpr char tmpSpineBinFile[] = "/spine.bin.tmp";
 constexpr char tmpTocBinFile[] = "/toc.bin.tmp";

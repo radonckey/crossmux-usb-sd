@@ -52,6 +52,7 @@ python fontconvert.py notosans_8_regular 8 \
   ../builtinFonts/source/NotoSans/NotoSans-Regular.ttf \
   ../builtinFonts/source/NotoSansHebrew/NotoSansHebrew-Regular.ttf \
   --additional-intervals 0x05D0,0x05EA > ../builtinFonts/notosans_8_regular.h
+<<<<<<< HEAD
 
 # Chinese chess piece characters: 仕 俥 馬 兵 卒 士 将 帅 炮 相 砲 象 车 马
 # Source font is provided as a pre-subset TTF containing only those 14 glyphs
@@ -77,6 +78,8 @@ if [ -f ../builtinFonts/source/ChineseChess/ChineseChess.ttf ]; then
 else
   echo "Skipping chinese_chess_16: ChineseChess.ttf source not present"
 fi
+=======
+>>>>>>> upstream/master
 
 echo ""
 echo "Running compression verification..."

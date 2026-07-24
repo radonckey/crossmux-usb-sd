@@ -17,7 +17,10 @@
 #include <iterator>
 #include <limits>
 
+<<<<<<< HEAD
 #include "AchievementsStore.h"
+=======
+>>>>>>> upstream/master
 #include "BookmarkEntry.h"
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
@@ -36,7 +39,10 @@
 #include "RecentBooksStore.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+<<<<<<< HEAD
 #include "util/AchievementPopupUtils.h"
+=======
+>>>>>>> upstream/master
 #include "util/BookmarkUtil.h"
 #include "util/ScreenshotUtil.h"
 
@@ -237,6 +243,8 @@ void EpubReaderActivity::onEnter() {
 
   loadCachedBookmarks();
 
+  loadCachedBookmarks();
+
   // Trigger first update
   requestUpdate();
 }
@@ -252,15 +260,21 @@ void EpubReaderActivity::onExit() {
 
   // Leaving mid-footnote loses the in-RAM return stack on deep sleep; persist the
   // pre-footnote position so the book reopens at the link origin, not the footnote.
+<<<<<<< HEAD
   // Runs before endSession() so the final stats progress reflects the link origin.
+=======
+>>>>>>> upstream/master
   if (footnoteDepth > 0 && epub) {
     const SavedPosition& origin = savedPositions[0];
     saveProgress(origin.spineIndex, origin.pageNumber, 0);
   }
 
+<<<<<<< HEAD
   READING_STATS.endSession();
   ACHIEVEMENTS.recordSessionEnded(READING_STATS.getLastSessionSnapshot());
   showPendingAchievementPopups(renderer);
+=======
+>>>>>>> upstream/master
   section.reset();
   if (pendingReadFolderMove && epub) {
     const std::string srcPath = epub->getPath();
@@ -361,7 +375,10 @@ void EpubReaderActivity::loop() {
                                  renderer, mappedInput, epub->getTitle(), currentPage, totalPages, bookProgressPercent,
                                  SETTINGS.orientation, !currentPageFootnotes.empty(), !cachedBookmarks.empty()),
                              [this](const ActivityResult& result) {
+<<<<<<< HEAD
                                READING_STATS.resumeSession();
+=======
+>>>>>>> upstream/master
                                // Always apply orientation change even if the menu was cancelled
                                const auto& menu = std::get<MenuResult>(result.data);
                                applyOrientation(menu.orientation);
@@ -598,7 +615,10 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
       startActivityForResult(
           std::make_unique<EpubReaderChapterSelectionActivity>(renderer, mappedInput, epub, path, spineIdx),
           [this](const ActivityResult& result) {
+<<<<<<< HEAD
             READING_STATS.resumeSession();
+=======
+>>>>>>> upstream/master
             if (!result.isCancelled) {
               const auto& chapterResult = std::get<ChapterResult>(result.data);
               RenderLock lock(*this);
@@ -700,10 +720,13 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
     }
     case EpubReaderMenuActivity::MenuAction::TOGGLE_BOOKMARK: {
       addBookmark();
+<<<<<<< HEAD
       // addBookmark() sets bookmarkRemoved but not the popup flags (the long-press
       // path sets them itself); show the added/removed popup for the menu path too.
       showBookmarkMessage = true;
       bookmarkMessageTime = millis();
+=======
+>>>>>>> upstream/master
       break;
     }
   }
@@ -1090,7 +1113,10 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
   // Font prewarm: scan pass accumulates text, then prewarm, then real render
   auto* fcm = renderer.getFontCacheManager();
   auto scope = fcm->createPrewarmScope();
+<<<<<<< HEAD
   TextBlock::fakeBold = SETTINGS.fakeBold;
+=======
+>>>>>>> upstream/master
   page->render(renderer, fontId, orientedMarginLeft, orientedMarginTop);  // scan pass
   scope.endScanAndPrewarm();
   const auto tPrewarm = millis();

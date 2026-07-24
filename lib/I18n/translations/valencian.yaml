@@ -2,7 +2,11 @@ _language_name: "Valencià"
 _language_code: "CAV"
 _order: "22"
 
+<<<<<<< HEAD
 STR_CROSSPOINT: "CrossMux"
+=======
+STR_CROSSPOINT: "CrossPoint"
+>>>>>>> upstream/master
 STR_BOOTING: "ARRENCANT"
 STR_SLEEPING: "ENTRANT EN REPÒS"
 STR_ENTERING_SLEEP: "Entrant en repòs"
@@ -45,7 +49,10 @@ STR_OPEN_URL_HINT: "Obriu este URL al navegador"
 STR_OR_HTTP_PREFIX: "o http://"
 STR_SCAN_QR_HINT: "o escanegeu el codi QR amb el telèfon:"
 STR_CALIBRE_WIRELESS: "Calibre sense fils"
+<<<<<<< HEAD
 STR_CALIBRE_WEB_URL: "OPDS URL"
+=======
+>>>>>>> upstream/master
 STR_NETWORK_LEGEND: "* = Encriptat | + = Guardat"
 STR_MAC_ADDRESS: "Adreça MAC:"
 STR_CHECKING_WIFI: "S'està comprovant el Wi-Fi..."
@@ -63,7 +70,10 @@ STR_CAT_CONTROLS: "Controls"
 STR_CAT_SYSTEM: "Sistema"
 STR_SLEEP_SCREEN: "Pantalla de repòs"
 STR_QUICK_RESUME_TIMEOUT: "Represa ràpida després del temps"
+<<<<<<< HEAD
 STR_AFTER_TIMEOUT: "Després del temps"
+=======
+>>>>>>> upstream/master
 STR_SLEEP_COVER_MODE: "Mode de pantalla de repòs"
 STR_HIDE_BATTERY: "Oculta el % de bateria"
 STR_EXTRA_SPACING: "Espaiat de paràgraf extra"
@@ -149,10 +159,16 @@ STR_PREV_NEXT: "Anterior/Següent"
 STR_NEXT_PREV: "Següent/Anterior"
 STR_KOSYNC: "KOSync"
 STR_BOOKMARK_OPTION: "Punt de llibre"
+<<<<<<< HEAD
 STR_NOTO_SERIF: "Noto Serif"
 STR_NOTO_SANS: "Noto Sans"
 STR_OPEN_DYSLEXIC: "Open Dyslexic"
 STR_DISABLED: "Desactivats"
+=======
+STR_DISABLED: "Desactivats"
+STR_NOTO_SERIF: "Noto Serif"
+STR_NOTO_SANS: "Noto Sans"
+>>>>>>> upstream/master
 STR_SMALL: "Petita"
 STR_MEDIUM: "Mitjana"
 STR_LARGE: "Gran"
@@ -164,12 +180,15 @@ STR_JUSTIFY: "Justificat"
 STR_ALIGN_LEFT: "Esquerra"
 STR_CENTER: "Centre"
 STR_ALIGN_RIGHT: "Dreta"
+<<<<<<< HEAD
 STR_MIN_1: "1 min"
 STR_MIN_3: "3 min"
 STR_MIN_5: "5 min"
 STR_MIN_10: "10 min"
 STR_MIN_15: "15 min"
 STR_MIN_30: "30 min"
+=======
+>>>>>>> upstream/master
 STR_PAGES_1: "1 pàgina"
 STR_PAGES_5: "5 pàgines"
 STR_PAGES_10: "10 pàgines"
@@ -349,7 +368,10 @@ STR_ADD_SERVER: "Afig servidor"
 STR_SERVER_NAME: "Nom del servidor"
 STR_NO_SERVERS: "No hi ha servidors OPDS configurats"
 STR_DELETE_SERVER: "Elimina el servidor"
+<<<<<<< HEAD
 STR_DELETE_CONFIRM: "Voleu eliminar este servidor?"
+=======
+>>>>>>> upstream/master
 STR_OPDS_SERVERS: "Servidors OPDS"
 STR_MANAGE_FONTS: "Gestiona les fonts"
 STR_FONT_BROWSER: "Navegador de fonts"
@@ -358,6 +380,7 @@ STR_NO_FONTS_AVAILABLE: "No hi ha fonts disponibles"
 STR_FONT_INSTALLED: "Font instal·lada!"
 STR_FONT_INSTALL_FAILED: "Ha fallat la instal·lació de la font"
 STR_INSTALLED: "Instal·lat"
+<<<<<<< HEAD
 STR_CONFIRM_DOWNLOAD_PROMPT: "Voleu descarregar?"
 STR_SD_CARD_FULL: "Espai insuficient a la targeta SD"
 STR_FILES_LABEL: "Arxius: "
@@ -366,6 +389,10 @@ STR_REDOWNLOAD: "Torna a descarregar"
 STR_DOWNLOAD_ALL: "Descarrega-ho tot"
 STR_UPDATE_ALL: "Actualitza-ho tot"
 STR_ALL_FONTS_INSTALLED: "Totes les fonts estan instal·lades!"
+=======
+STR_DOWNLOAD_ALL: "Descarrega-ho tot"
+STR_UPDATE_ALL: "Actualitza-ho tot"
+>>>>>>> upstream/master
 STR_UPDATE_AVAILABLE: "Actualitza"
 STR_CRASH_TITLE: "Bloqueig del sistema"
 STR_CRASH_DESCRIPTION: "S'ha guardat un informe detallat a crash_report.txt. Incloeu este arxiu en l'informe d'errors."

@@ -56,6 +56,7 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
       const int suffixX = wordX + wordFocusSuffixX[i];
       renderer.drawText(fontId, suffixX, wordY, words[i].c_str() + boldLen, true, currentStyle, baseDir);
     } else {
+<<<<<<< HEAD
       if (fakeBold && (currentStyle & EpdFontFamily::BOLD) != 0) {
         auto fbStyle = static_cast<EpdFontFamily::Style>(currentStyle & ~EpdFontFamily::BOLD);
         if (fakeBold >= 2) {
@@ -71,10 +72,14 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
       } else {
         renderer.drawText(fontId, wordX, wordY, words[i].c_str(), true, currentStyle, baseDir);
       }
+=======
+      renderer.drawText(fontId, wordX, wordY, words[i].c_str(), true, currentStyle, baseDir);
+>>>>>>> upstream/master
     }
 
     if (!scanning && (currentStyle & EpdFontFamily::UNDERLINE) != 0) {
       const std::string& w = words[i];
+<<<<<<< HEAD
       const int fullWordWidth = renderer.getTextWidth(fontId, w.c_str(), currentStyle, baseDir);
       // y is the top of the text line; add ascender to reach baseline, then offset 2px below
       const int underlineY = wordY + ascender + 2;
@@ -98,6 +103,16 @@ void TextBlock::render(const GfxRenderer& renderer, const int fontId, const int 
       }
 
       renderer.drawLine(startX, underlineY, startX + underlineWidth, underlineY, true);
+=======
+      int underlineWidth = renderer.getTextWidth(fontId, w.c_str(), currentStyle, baseDir);
+      const int underlineY = wordY + ascender + 2;
+
+      if ((currentStyle & (EpdFontFamily::SUP | EpdFontFamily::SUB)) != 0) {
+        underlineWidth = (underlineWidth + 1) / 2;
+      }
+
+      renderer.drawLine(wordX, underlineY, wordX + underlineWidth, underlineY, true);
+>>>>>>> upstream/master
     }
   }
 }

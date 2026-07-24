@@ -79,6 +79,10 @@ STR_LONG_PRESS_BEHAVIOR: "Long-press button behavior"
 STR_LONG_PRESS_BEHAVIOR_OFF: "OFF"
 STR_LONG_PRESS_BEHAVIOR_SKIP: "Chapter skip"
 STR_LONG_PRESS_BEHAVIOR_ORIENTATION: "Orientation change"
+<<<<<<< HEAD
+=======
+STR_LONG_PRESS_MENU: "Long-press Menu"
+>>>>>>> upstream/master
 STR_FONT_PREVIEW_TEXT: "The quick brown fox jumps over the lazy dog"
 STR_FONT_FAMILY: "Reader Font Family"
 STR_FONT_SIZE: "Reader Font Size"
@@ -143,6 +147,11 @@ STR_ORIENTATION_INVERTED: "Portrait 180°"
 STR_LANDSCAPE_CCW: "Landscape CCW"
 STR_PREV_NEXT: "Prev/Next"
 STR_NEXT_PREV: "Next/Prev"
+<<<<<<< HEAD
+=======
+STR_KOSYNC: "KOSync"
+STR_BOOKMARK_OPTION: "Bookmark"
+>>>>>>> upstream/master
 STR_DISABLED: "Disabled"
 STR_NOTO_SERIF: "Noto Serif"
 STR_NOTO_SANS: "Noto Sans"

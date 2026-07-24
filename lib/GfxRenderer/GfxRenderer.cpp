@@ -1642,6 +1642,7 @@ int GfxRenderer::getTextAdvanceX(const int fontId, const char* text, EpdFontFami
   // where kern/lig data was not loaded.
   auto sdIt = sdCardFonts_.find(fontId);
   if (sdIt != sdCardFonts_.end() && sdIt->second->hasAdvanceTable()) {
+<<<<<<< HEAD
     const bool isSupSub = (style & (EpdFontFamily::SUP | EpdFontFamily::SUB)) != 0;
     const uint8_t styleIdx = resolveSdCardStyle(*sdIt->second, style);
     int widthPx = 0;
@@ -1669,6 +1670,24 @@ int GfxRenderer::getTextAdvanceX(const int fontId, const char* text, EpdFontFami
       // to keep measurement consistent with drawText and the builtin-font path below.
       if (isSupSub) prevAdvanceFP = (prevAdvanceFP + 1) / 2;
       havePrev = true;
+=======
+    int32_t widthFP = 0;
+    const bool isSupSub = (style & (EpdFontFamily::SUP | EpdFontFamily::SUB)) != 0;
+    const uint8_t styleIdx = resolveSdCardStyle(*sdIt->second, style);
+    const auto fontIt = fontMap.find(fontId);
+    if (fontIt == fontMap.end()) {
+      LOG_ERR("GFX", "Font %d not found", fontId);
+      return 0;
+    }
+    const auto& font = fontIt->second;
+    while (uint32_t cp = utf8NextCodepoint(reinterpret_cast<const uint8_t**>(&text))) {
+      int32_t advFP = sdIt->second->getAdvance(cp, styleIdx);
+      if (advFP == 0 && !utf8IsCombiningMark(cp)) {
+        const EpdGlyph* glyph = font.getGlyph(cp, style);
+        advFP = glyph ? glyph->advanceX : 0;
+      }
+      widthFP += isSupSub ? (advFP + 1) / 2 : advFP;
+>>>>>>> upstream/master
     }
     if (havePrev) widthPx += fp4::toPixel(prevAdvanceFP);  // final glyph's advance
     return widthPx;

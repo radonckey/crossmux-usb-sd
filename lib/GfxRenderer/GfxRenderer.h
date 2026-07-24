@@ -79,6 +79,7 @@ class GfxRenderer {
   mutable int _stripRows = 0;
   mutable bool _stripActive = false;
 
+<<<<<<< HEAD
   // Logical-coordinate clip rectangle (scissor). When active, drawPixel()
   // silently drops pixels whose *logical* (x, y) falls outside [clipX0, clipX1)
   // x [clipY0, clipY1) — without logging "Outside range". Used by scrolling
@@ -93,6 +94,8 @@ class GfxRenderer {
   mutable int clipX1 = 0;
   mutable int clipY1 = 0;
 
+=======
+>>>>>>> upstream/master
   void renderChar(const EpdFontFamily& fontFamily, uint32_t cp, int* x, int* y, bool pixelState,
                   EpdFontFamily::Style style) const;
   void freeBwBufferChunks();
@@ -192,6 +195,7 @@ class GfxRenderer {
   int getWriteOriginY() const { return _stripActive ? _stripY0 : 0; }
   int getWriteRows() const { return _stripActive ? _stripRows : panelHeight; }
 
+<<<<<<< HEAD
   // Logical-coordinate clip rectangle (scissor). While set, drawPixel() drops
   // pixels outside [x, x+width) x [y, y+height) without logging. Coordinates are
   // logical (pre-rotation), matching what activities pass to draw calls. Prefer
@@ -219,6 +223,8 @@ class GfxRenderer {
     ClipScope& operator=(const ClipScope&) = delete;
   };
 
+=======
+>>>>>>> upstream/master
   // Drawing
   void drawPixel(int x, int y, bool state = true) const;
   void drawLine(int x1, int y1, int x2, int y2, bool state = true) const;

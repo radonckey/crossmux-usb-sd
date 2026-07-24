@@ -1,8 +1,14 @@
 _language_name: "עברית"
 _language_code: "HE"
+<<<<<<< HEAD
 _order: "26"
 
 STR_CROSSPOINT: "CrossMux"
+=======
+_order: "23"
+
+STR_CROSSPOINT: "CrossPoint"
+>>>>>>> upstream/master
 STR_BOOTING: "מפעיל..."
 STR_SLEEPING: "מצב שינה"
 STR_ENTERING_SLEEP: "עובר למצב שינה"

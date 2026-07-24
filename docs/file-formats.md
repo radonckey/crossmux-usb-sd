@@ -6,11 +6,16 @@ All POD fields are written in the ESP32 little-endian representation used by
 
 ## `book.bin`
 
+<<<<<<< HEAD
 ### Version 9
+=======
+### Version 7
+>>>>>>> upstream/master
 
 `book.bin` stores EPUB metadata plus lookup tables for spine and TOC entries.
 The current firmware writes this version from `BookMetadataCache`.
 
+<<<<<<< HEAD
 > Version 9 was set on the upstream-master sync. The byte layout is identical to
 > the fork's 8 and upstream's 8 (both added the `language` metadata field), but
 > those two v8 lineages stored TOC/book titles un-normalized while upstream now
@@ -19,6 +24,8 @@ The current firmware writes this version from `BookMetadataCache`.
 > re-parse that re-composes existing caches' titles to NFC. `BookMetadataCache.cpp`
 > is the source of truth.
 
+=======
+>>>>>>> upstream/master
 ImHex pattern:
 
 ```c++
@@ -26,7 +33,11 @@ import std.mem;
 import std.string;
 import std.core;
 
+<<<<<<< HEAD
 #define EXPECTED_VERSION 9
+=======
+#define EXPECTED_VERSION 7
+>>>>>>> upstream/master
 #define MAX_STRING_LENGTH 65535
 
 struct String {
@@ -98,6 +109,7 @@ if (parsedSize != fileSize) {
 
 ## `section.bin`
 
+<<<<<<< HEAD
 ### Version 32
 
 > Chinese builds (`ENABLE_CHINESE_VERSION`) carry an independent version counter,
@@ -114,11 +126,19 @@ if (parsedSize != fileSize) {
 > cache. `lib/Epub/Epub/Section.cpp` is the source of truth.
 
 
+=======
+### Version 25
+
+>>>>>>> upstream/master
 Each file in `sections/*.bin` stores one laid-out spine section. The header is
 also the cache-busting key: if any layout-affecting setting differs from the
 current reader settings, the section is discarded and rebuilt.
 
+<<<<<<< HEAD
 Version 32 includes:
+=======
+Version 25 includes:
+>>>>>>> upstream/master
 
 - cache-busting fields for paragraph alignment, hyphenation, embedded CSS,
   image rendering mode, and Focus Reading
@@ -135,7 +155,11 @@ import std.mem;
 import std.string;
 import std.core;
 
+<<<<<<< HEAD
 #define EXPECTED_VERSION 32
+=======
+#define EXPECTED_VERSION 25
+>>>>>>> upstream/master
 #define MAX_STRING_LENGTH 65535
 #define FOOTNOTE_NUMBER_LEN 32
 #define FOOTNOTE_HREF_LEN 96

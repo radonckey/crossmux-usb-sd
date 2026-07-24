@@ -10,6 +10,7 @@
 #include "parsers/ChapterHtmlSlimParser.h"
 
 namespace {
+<<<<<<< HEAD
 // Cache layout version. Latin and Chinese builds emit different word streams
 // (per-character CJK tokenization + 禁则 + full-width padding live behind
 // ENABLE_CHINESE_VERSION in ParsedText.cpp), so cached pages from one flavor
@@ -28,6 +29,10 @@ constexpr uint8_t SECTION_FILE_VERSION =
     32;  // was 30; upstream-master sync: words NFC-composed (#2277) + TextBlock now
          // serializes blockStyle.isRtl/directionDefined (#1700), so the block layout changed
 #endif
+=======
+// v27: words NFC-composed at layout time; bump invalidates NFD section caches.
+constexpr uint8_t SECTION_FILE_VERSION = 27;
+>>>>>>> upstream/master
 constexpr uint32_t HEADER_SIZE = sizeof(uint8_t) + sizeof(int) + sizeof(float) + sizeof(bool) + sizeof(uint8_t) +
                                  sizeof(uint16_t) + sizeof(uint16_t) + sizeof(uint16_t) + sizeof(bool) + sizeof(bool) +
                                  sizeof(uint8_t) + sizeof(bool) + sizeof(uint32_t) + sizeof(uint32_t) +
